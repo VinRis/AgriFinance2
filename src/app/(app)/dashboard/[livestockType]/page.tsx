@@ -3,7 +3,7 @@ import { notFound, usePathname } from 'next/navigation';
 import { Card, CardHeader, CardTitle, CardContent, CardDescription } from '@/components/ui/card';
 import { useAppContext } from '@/contexts/app-context';
 import { LivestockType, AgriTransaction } from '@/lib/types';
-import { DollarSign, TrendingUp, TrendingDown, BookOpen, Lightbulb, Filter } from 'lucide-react';
+import { DollarSign, TrendingUp, TrendingDown, BookOpen, Lightbulb, Filter, Target } from 'lucide-react';
 import { Bar, BarChart, ResponsiveContainer, XAxis, YAxis, Tooltip, CartesianGrid, Pie, PieChart, Cell, Legend } from 'recharts';
 import { useMemo, useState } from 'react';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -11,6 +11,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
+import { sub, startOfYear, startOfMonth, endOfMonth, endOfYear } from 'date-fns';
+import { Progress } from '@/components/ui/progress';
 
 interface AggregatedData {
   totalRevenue: number;
@@ -26,6 +28,9 @@ function formatCurrency(amount: number, currency: string) {
 }
 
 function aggregateData(transactions: AgriTransaction[]): AggregatedData {
+    if (!transactions) {
+        return { totalRevenue: 0, totalExpenses: 0, netProfit: 0, totalTransactions: 0, barChartData: [], pieChartData: [] };
+    }
     const dailyData: { [key: string]: { revenue: number; expenses: number } } = {};
     const expenseCategories: { [key: string]: number } = {};
 
@@ -111,7 +116,7 @@ export default function DashboardPage() {
   
   const { getTransactions, settings, isHydrated } = useAppContext();
   
-  const [filterType, setFilterType] = useState('all');
+  const [filterType, setFilterType] = useState('month');
   const [selectedYear, setSelectedYear] = useState(currentYear);
   const [selectedMonth, setSelectedMonth] = useState(new Date().getMonth());
 
@@ -121,52 +126,115 @@ export default function DashboardPage() {
   
   const allTransactions = getTransactions(livestockType);
 
-  const filteredTransactions = useMemo(() => {
-    if (!isHydrated) return [];
-    if (filterType === 'all') return allTransactions;
+  const { currentPeriodTransactions, previousPeriodTransactions } = useMemo(() => {
+    if (!isHydrated) return { currentPeriodTransactions: [], previousPeriodTransactions: [] };
 
-    const now = new Date();
-    return allTransactions.filter(t => {
-      const transactionDate = new Date(t.date);
-      if (filterType === 'ytd') {
-        return transactionDate.getFullYear() === now.getFullYear();
-      }
-      if (filterType === 'year') {
-        return transactionDate.getFullYear() === selectedYear;
-      }
-      if (filterType === 'month') {
-        return transactionDate.getFullYear() === selectedYear && transactionDate.getMonth() === selectedMonth;
-      }
-      return true;
-    });
+    const getPeriodTransactions = (type: string, year: number, month: number) => {
+        let fromDate: Date, toDate: Date;
+        const now = new Date();
+
+        switch (type) {
+            case 'ytd':
+                fromDate = startOfYear(now);
+                toDate = now;
+                break;
+            case 'year':
+                fromDate = startOfYear(new Date(year, 0, 1));
+                toDate = endOfYear(new Date(year, 11, 31));
+                break;
+            case 'month':
+                fromDate = startOfMonth(new Date(year, month));
+                toDate = endOfMonth(new Date(year, month));
+                break;
+            case 'all':
+            default:
+                return allTransactions;
+        }
+
+        return allTransactions.filter(t => {
+            const transactionDate = new Date(t.date);
+            return transactionDate >= fromDate && transactionDate <= toDate;
+        });
+    };
+    
+    const getPreviousPeriodDates = (type: string, year: number, month: number) => {
+        let prevYear = year;
+        let prevMonth = month;
+
+        switch (type) {
+             case 'ytd':
+                 // Previous YTD is all of last year for simplicity
+                prevYear = year - 1;
+                return { type: 'year', year: prevYear, month: prevMonth };
+            case 'year':
+                prevYear = year - 1;
+                return { type: 'year', year: prevYear, month: prevMonth };
+            case 'month':
+                const currentMonthDate = new Date(year, month);
+                const prevMonthDate = sub(currentMonthDate, { months: 1 });
+                prevYear = prevMonthDate.getFullYear();
+                prevMonth = prevMonthDate.getMonth();
+                return { type: 'month', year: prevYear, month: prevMonth };
+            default:
+                 return { type: 'all', year: year, month: month };
+        }
+    };
+    
+    const currentPeriodTransactions = getPeriodTransactions(filterType, selectedYear, selectedMonth);
+    const { type: prevType, year: prevYear, month: prevMonth } = getPreviousPeriodDates(filterType, selectedYear, selectedMonth);
+    const previousPeriodTransactions = getPeriodTransactions(prevType, prevYear, prevMonth);
+
+
+    return { currentPeriodTransactions, previousPeriodTransactions };
   }, [allTransactions, filterType, selectedYear, selectedMonth, isHydrated]);
 
 
-  const aggregatedData = aggregateData(filteredTransactions);
+  const aggregatedData = aggregateData(currentPeriodTransactions);
+  const prevAggregatedData = aggregateData(previousPeriodTransactions);
+
   const { totalRevenue, totalExpenses, netProfit, totalTransactions, barChartData, pieChartData } = aggregatedData;
   const financialSummary = generateFinancialSummary(aggregatedData, settings.currency);
+
+  const calculatePercentageChange = (current: number, previous: number) => {
+    if (previous === 0) {
+      return current > 0 ? 100 : 0;
+    }
+    return ((current - previous) / previous) * 100;
+  };
   
-  const KPICard = ({ title, value, icon: Icon, description }: { title: string; value: string; icon: React.ElementType, description: string }) => (
-    <Card>
-      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-        <CardTitle className="text-sm font-medium">{title}</CardTitle>
-        <Icon className="h-4 w-4 text-muted-foreground" />
-      </CardHeader>
-      <CardContent>
-        {isHydrated ? (
-          <>
-            <div className="text-xl md:text-2xl font-bold">{value}</div>
-            <p className="text-xs text-muted-foreground">{description}</p>
-          </>
-        ) : (
-          <>
-            <Skeleton className="h-8 w-3/4" />
-            <Skeleton className="h-4 w-full mt-1" />
-          </>
-        )}
-      </CardContent>
-    </Card>
-  );
+  const KPICard = ({ title, value, icon: Icon, description, currentValue, previousValue, isCurrency = true }: { title: string; value: string; icon: React.ElementType, description: string; currentValue: number; previousValue: number; isCurrency?: boolean; }) => {
+    const percentageChange = calculatePercentageChange(currentValue, previousValue);
+    const changeText = isFinite(percentageChange) ? `${percentageChange.toFixed(1)}% from last period` : "vs. N/A";
+    const changeColor = percentageChange >= 0 ? 'text-green-600' : 'text-red-600';
+
+    return (
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">{title}</CardTitle>
+            <Icon className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            {isHydrated ? (
+              <>
+                <div className="text-xl md:text-2xl font-bold">{value}</div>
+                <p className="text-xs text-muted-foreground">{description}</p>
+                {filterType !== 'all' && (
+                  <p className={`text-xs ${changeColor} mt-1`}>
+                    {percentageChange >= 0 ? '▲' : '▼'} {changeText}
+                  </p>
+                )}
+              </>
+            ) : (
+              <>
+                <Skeleton className="h-8 w-3/4" />
+                <Skeleton className="h-4 w-full mt-1" />
+                <Skeleton className="h-3 w-1/2 mt-1" />
+              </>
+            )}
+          </CardContent>
+        </Card>
+    );
+  };
 
   const COLORS = useMemo(() => [
     'hsl(var(--chart-1))',
@@ -186,6 +254,8 @@ export default function DashboardPage() {
       default: return 'Filter';
     }
   }
+
+  const breakevenProgress = totalExpenses > 0 ? (totalRevenue / totalExpenses) * 100 : 0;
 
   return (
     <div className="grid auto-rows-max items-start gap-4 md:gap-8 lg:col-span-3">
@@ -272,26 +342,64 @@ export default function DashboardPage() {
                 value={formatCurrency(totalRevenue, settings.currency)}
                 icon={DollarSign}
                 description="Total income from sales."
+                currentValue={totalRevenue}
+                previousValue={prevAggregatedData.totalRevenue}
             />
              <KPICard
                 title="Total Expenses"
                 value={formatCurrency(totalExpenses, settings.currency)}
                 icon={DollarSign}
                 description="Total expenses incurred."
+                currentValue={totalExpenses}
+                previousValue={prevAggregatedData.totalExpenses}
             />
             <KPICard
                 title="Net Profit"
                 value={formatCurrency(netProfit, settings.currency)}
                 icon={netProfit >= 0 ? TrendingUp : TrendingDown}
                 description="Profit after expenses."
+                currentValue={netProfit}
+                previousValue={prevAggregatedData.netProfit}
             />
             <KPICard
                 title="Transactions"
                 value={totalTransactions.toLocaleString('en-US')}
                 icon={BookOpen}
                 description="Total number of entries."
+                currentValue={totalTransactions}
+                previousValue={prevAggregatedData.totalTransactions}
+                isCurrency={false}
             />
        </div>
+
+      <Card>
+        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Breakeven Analysis</CardTitle>
+            <Target className="h-4 w-4 text-muted-foreground" />
+        </CardHeader>
+        <CardContent>
+            {isHydrated ? (
+                <>
+                    <div className="text-xl font-bold">{formatCurrency(totalExpenses, settings.currency)}</div>
+                    <p className="text-xs text-muted-foreground">This is your breakeven point (total expenses).</p>
+                    <Progress value={breakevenProgress} className="w-full mt-3 h-2" />
+                    <p className="text-sm mt-2 text-foreground/90">
+                        {netProfit >= 0
+                            ? `You've surpassed your breakeven point by ${formatCurrency(netProfit, settings.currency)}.`
+                            : `You need to earn ${formatCurrency(-netProfit, settings.currency)} more to break even.`}
+                    </p>
+                </>
+            ) : (
+                <>
+                    <Skeleton className="h-8 w-3/4" />
+                    <Skeleton className="h-4 w-full mt-1" />
+                    <Skeleton className="h-2 w-full mt-3" />
+                    <Skeleton className="h-4 w-3/4 mt-2" />
+                </>
+            )}
+        </CardContent>
+      </Card>
+
 
        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-7">
           <Card className="lg:col-span-4">
@@ -300,7 +408,7 @@ export default function DashboardPage() {
                   <CardDescription>A summary of income and expenses. Bar chart shows last 30 days of selected period.</CardDescription>
               </CardHeader>
               <CardContent>
-                  {isHydrated && filteredTransactions.length > 0 ? (
+                  {isHydrated && currentPeriodTransactions.length > 0 ? (
                   <ResponsiveContainer width="100%" height={300}>
                       <BarChart data={barChartData}>
                           <CartesianGrid strokeDasharray="3 3" vertical={false} />
