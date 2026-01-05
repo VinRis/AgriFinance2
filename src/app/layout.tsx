@@ -3,10 +3,12 @@ import './globals.css';
 import {ThemeProvider} from '@/components/theme-provider';
 import {Toaster} from '@/components/ui/toaster';
 import {AppProvider} from '@/contexts/app-context';
+import { PWALifecycle } from '@/components/pwa-lifecycle';
 
 export const metadata: Metadata = {
   title: 'AgriFinance Pro',
   description: 'Financial management for your livestock enterprise.',
+  manifest: '/manifest.json'
 };
 
 export default function RootLayout({
@@ -27,6 +29,7 @@ export default function RootLayout({
       <body>
         <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
           <AppProvider>
+            <PWALifecycle />
             {children}
             <Toaster />
           </AppProvider>
