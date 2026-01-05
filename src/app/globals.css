@@ -74,6 +74,10 @@
   }
 }
 
+.print-only {
+    display: none;
+}
+
 @media print {
   @page {
     size: A4;
