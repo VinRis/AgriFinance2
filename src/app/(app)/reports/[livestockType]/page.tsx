@@ -107,7 +107,7 @@ export default function ReportsPage() {
     return { monthlyData, annualTotals };
   }, [transactions, selectedYear]);
 
-  const generateCSV = () => {
+  const generateFullReportCSV = () => {
     if (transactions.length === 0) {
       toast({
         variant: 'destructive',
@@ -137,6 +137,36 @@ export default function ReportsPage() {
     document.body.removeChild(link);
   };
   
+  const generatePnLCSV = () => {
+    const { monthlyData, annualTotals } = pnlData;
+    if (monthlyData.length === 0) {
+      toast({
+        variant: 'destructive',
+        title: 'No Data to Export',
+        description: `There is no data for the year ${selectedYear}.`
+      });
+      return;
+    }
+
+    const headers = ['Month', 'Income', 'Expenses', 'Net Profit'];
+    const csvRows = [
+      headers.join(','),
+      ...monthlyData.map(d => [d.month, d.income, d.expenses, d.netProfit].join(',')),
+      ['Annual Total', annualTotals.income, annualTotals.expenses, annualTotals.netProfit].join(',')
+    ];
+    const csv = csvRows.join('\n');
+
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    const url = URL.createObjectURL(blob);
+    link.href = url;
+    link.setAttribute('download', `${livestockType}-pnl-report-${selectedYear}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+  };
+  
   const handlePrint = () => {
     window.print();
   };
@@ -155,7 +185,7 @@ export default function ReportsPage() {
           <CardContent>
             <p>You can export all your data as a CSV file or print a professional summary of your records.</p>
              <div className="mt-6 flex flex-col sm:flex-row gap-4">
-                 <Button onClick={generateCSV} disabled={transactions.length === 0}>
+                 <Button onClick={generateFullReportCSV} disabled={transactions.length === 0}>
                     <Download className="mr-2" />
                     Export All as CSV
                 </Button>
@@ -186,6 +216,10 @@ export default function ReportsPage() {
                                 {years.map(y => <SelectItem key={y} value={String(y)}>{y}</SelectItem>)}
                             </SelectContent>
                         </Select>
+                        <Button onClick={generatePnLCSV} variant="outline" size="icon" disabled={pnlData.monthlyData.length === 0}>
+                            <Download className="h-4 w-4" />
+                            <span className="sr-only">Export P&L</span>
+                        </Button>
                     </div>
                 </div>
             </CardHeader>
@@ -339,5 +373,3 @@ export default function ReportsPage() {
     </div>
   );
 }
-
-    
