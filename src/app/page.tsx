@@ -168,25 +168,32 @@ export default function LivestockSelectionPage() {
             </CardContent>
         </Card>
         <Card>
-          <CardContent className="flex flex-col items-center justify-center gap-4 p-6 sm:flex-row">
-            <h3 className="text-center font-semibold text-foreground">Manage Your Data</h3>
-            <div className="flex flex-col gap-4 sm:ml-auto sm:flex-row">
-              <Button onClick={handleBackup}>
-                <Download className="mr-2" />
-                Backup Data
-              </Button>
-              <Button onClick={handleRestoreClick} variant="outline">
-                <Upload className="mr-2" />
-                Restore Data
-              </Button>
-              <input
-                type="file"
-                ref={fileInputRef}
-                onChange={handleFileChange}
-                accept="application/json"
-                className="hidden"
-              />
+           <CardHeader>
+              <CardTitle>Manage Your Data</CardTitle>
+            </CardHeader>
+          <CardContent className="flex flex-col gap-4">
+             <div className="flex flex-col items-center justify-center gap-4 sm:flex-row">
+                <div className="flex flex-col gap-4 sm:flex-row">
+                  <Button onClick={handleBackup}>
+                    <Download className="mr-2" />
+                    Backup Data
+                  </Button>
+                  <Button onClick={handleRestoreClick} variant="outline">
+                    <Upload className="mr-2" />
+                    Restore Data
+                  </Button>
+                  <input
+                    type="file"
+                    ref={fileInputRef}
+                    onChange={handleFileChange}
+                    accept="application/json"
+                    className="hidden"
+                  />
+                </div>
             </div>
+            <p className="text-xs text-muted-foreground text-center">
+                Keep a backup of your data at least once a week to avoid loss of data in case of changing or losing your phone.
+            </p>
           </CardContent>
         </Card>
       </div>
