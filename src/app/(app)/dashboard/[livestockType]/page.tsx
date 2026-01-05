@@ -303,16 +303,12 @@ export default function DashboardPage() {
                           <XAxis dataKey="date" stroke="hsl(var(--muted-foreground))" fontSize={12} tickLine={false} axisLine={false} />
                           <YAxis stroke="hsl(var(--muted-foreground))" fontSize={12} tickLine={false} axisLine={false} tickFormatter={(value) => `${settings.currency}${value}`} />
                           <Tooltip
+                            cursor={{ fill: 'hsl(var(--muted))', radius: 'var(--radius)'}}
                             contentStyle={{
                               backgroundColor: 'hsl(var(--background))',
                               borderColor: 'hsl(var(--border))',
-                              borderRadius: 'var(--radius)'
-                            }}
-                            labelStyle={{
-                              color:'hsl(var(--foreground))'
-                            }}
-                            itemStyle={{
-                              fontWeight: 'bold'
+                              borderRadius: 'var(--radius)',
+                              boxShadow: '0 4px 12px hsl(var(--foreground) / 0.1)'
                             }}
                           />
                           <Bar dataKey="revenue" fill="hsl(var(--primary))" radius={[4, 4, 0, 0]} name="Revenue" />
@@ -349,25 +345,27 @@ export default function DashboardPage() {
                         const x = cx + radius * Math.cos(-midAngle * (Math.PI / 180));
                         const y = cy + radius * Math.sin(-midAngle * (Math.PI / 180));
                         return (percent > 0.05) ? (
-                          <text x={x} y={y} fill="white" textAnchor="middle" dominantBaseline="central" fontSize={12}>
+                          <text x={x} y={y} fill="white" textAnchor="middle" dominantBaseline="central" fontSize={12} fontWeight="bold">
                             {`${(percent * 100).toFixed(0)}%`}
                           </text>
                         ) : null;
                       }}
                     >
                       {pieChartData.map((entry, index) => (
-                        <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                        <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} stroke="hsl(var(--background))" style={{filter: `drop-shadow(0 2px 4px hsl(var(--foreground) / 0.1))`}}/>
                       ))}
                     </Pie>
                     <Tooltip
+                        cursor={{ fill: 'hsl(var(--muted))' }}
                         contentStyle={{
                           backgroundColor: 'hsl(var(--background))',
                           borderColor: 'hsl(var(--border))',
-                          borderRadius: 'var(--radius)'
+                          borderRadius: 'var(--radius)',
+                          boxShadow: '0 4px 12px hsl(var(--foreground) / 0.1)'
                         }}
                         formatter={(value: number) => `${settings.currency} ${value.toFixed(2)}`}
                     />
-                    <Legend iconSize={10} />
+                    <Legend iconSize={12} iconType="circle" />
                   </PieChart>
                 </ResponsiveContainer>
               ) : isHydrated ? (
@@ -395,5 +393,3 @@ export default function DashboardPage() {
     </div>
   );
 }
-
-    
