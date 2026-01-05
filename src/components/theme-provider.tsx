@@ -8,7 +8,6 @@ type ThemeProviderProps = {
   children: React.ReactNode;
   defaultTheme?: Theme;
   storageKey?: string;
-  enableSystem?: boolean;
 };
 
 type ThemeProviderState = {
@@ -22,7 +21,6 @@ export function ThemeProvider({
   children,
   defaultTheme = 'system',
   storageKey = 'agrifinance-theme',
-  enableSystem = true,
 }: ThemeProviderProps) {
   const [theme, setTheme] = useState<Theme>(() => {
     if (typeof window === 'undefined') return defaultTheme;
@@ -34,7 +32,7 @@ export function ThemeProvider({
     root.classList.remove('light', 'dark');
 
     let effectiveTheme = theme;
-    if (theme === 'system' && enableSystem) {
+    if (theme === 'system') {
       effectiveTheme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
     }
     
@@ -42,7 +40,7 @@ export function ThemeProvider({
 
     const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
     const handleChange = () => {
-        if (theme === 'system' && enableSystem) {
+        if (theme === 'system') {
             const newSystemTheme = mediaQuery.matches ? 'dark' : 'light';
             root.classList.remove('light', 'dark');
             root.classList.add(newSystemTheme);
@@ -51,7 +49,7 @@ export function ThemeProvider({
     mediaQuery.addEventListener('change', handleChange);
     return () => mediaQuery.removeEventListener('change', handleChange);
 
-  }, [theme, enableSystem]);
+  }, [theme]);
 
   const value = {
     theme,
