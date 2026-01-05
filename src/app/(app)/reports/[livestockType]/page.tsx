@@ -1,14 +1,15 @@
 'use client';
 import { notFound, usePathname } from 'next/navigation';
-import { Card, CardHeader, CardTitle, CardContent, CardDescription } from '@/components/ui/card';
-import { LivestockType } from '@/lib/types';
+import { Card, CardHeader, CardTitle, CardContent, CardDescription, CardFooter } from '@/components/ui/card';
+import { LivestockType, AgriTransaction, AppSettings } from '@/lib/types';
 import { useAppContext } from '@/contexts/app-context';
 import { Button } from '@/components/ui/button';
-import { Download, Printer, BarChart as BarChartIcon } from 'lucide-react';
+import { Download, Printer } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useMemo, useState } from 'react';
-import { Bar, BarChart, ResponsiveContainer, XAxis, YAxis, Tooltip, Legend, Pie, PieChart, Cell } from 'recharts';
+import { Bar, BarChart, XAxis, YAxis, Tooltip, Legend, Pie, PieChart, Cell } from 'recharts';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 
 interface AggregatedData {
   totalRevenue: number;
@@ -17,6 +18,13 @@ interface AggregatedData {
   totalTransactions: number;
   incomeByCategory: { name: string; value: number }[];
   expensesByCategory: { name: string; value: number }[];
+}
+
+interface MonthlyData {
+  month: string;
+  income: number;
+  expenses: number;
+  netProfit: number;
 }
 
 function formatCurrency(amount: number, currency: string) {
@@ -44,9 +52,11 @@ export default function ReportsPage() {
   const title = livestockType === 'dairy' ? 'Dairy Reports' : 'Poultry Reports';
   const transactions = getTransactions(livestockType);
 
-  const aggregatedData: AggregatedData = useMemo(() => {
-    const yearlyTransactions = transactions.filter(t => new Date(t.date).getFullYear() === selectedYear);
+  const yearlyTransactions = useMemo(() => {
+    return transactions.filter(t => new Date(t.date).getFullYear() === selectedYear);
+  }, [transactions, selectedYear]);
 
+  const aggregatedData: AggregatedData = useMemo(() => {
     const data: AggregatedData = {
       totalRevenue: 0,
       totalExpenses: 0,
@@ -74,7 +84,31 @@ export default function ReportsPage() {
     data.expensesByCategory = Object.entries(expenseMap).map(([name, value]) => ({ name, value }));
     
     return data;
-  }, [transactions, selectedYear]);
+  }, [yearlyTransactions]);
+
+  const pnlData = useMemo(() => {
+    const monthlyData = Array(12).fill(null).map((_, i) => ({
+        month: months[i],
+        income: 0,
+        expenses: 0,
+        netProfit: 0
+    }));
+
+    yearlyTransactions.forEach(t => {
+        const monthIndex = new Date(t.date).getMonth();
+        if(t.transactionType === 'income') {
+            monthlyData[monthIndex].income += t.amount;
+        } else {
+            monthlyData[monthIndex].expenses += t.amount;
+        }
+    });
+
+    monthlyData.forEach(m => {
+        m.netProfit = m.income - m.expenses;
+    });
+
+    return monthlyData;
+  }, [yearlyTransactions]);
   
   const generateFullReportCSV = () => {
     if (transactions.length === 0) {
@@ -106,6 +140,36 @@ export default function ReportsPage() {
     document.body.removeChild(link);
   };
   
+  const generatePnlCSV = () => {
+    if (pnlData.length === 0) {
+        toast({
+            variant: "destructive",
+            title: "No Data to Export",
+            description: "There are no P&L transactions for the selected year.",
+        });
+        return;
+    }
+    const headers = Object.keys(pnlData[0] || {}).join(',');
+    const csv = [
+      headers,
+      ...pnlData.map(row =>
+        Object.values(row).map(value => JSON.stringify(value, (_, val) => val ?? '')).join(',')
+      )
+    ].join('\n');
+    
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    if (link.href) {
+      URL.revokeObjectURL(link.href);
+    }
+    const url = URL.createObjectURL(blob);
+    link.href = url;
+    link.setAttribute('download', `${livestockType}-pnl-report-${selectedYear}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
   const handlePrint = () => {
     window.print();
   };
@@ -181,12 +245,44 @@ export default function ReportsPage() {
                       <Download className="mr-2 h-4 w-4" />
                       Export All as CSV
                   </Button>
-                  <Button onClick={handlePrint} variant="outline" disabled={transactions.length === 0}>
+                  <Button onClick={handlePrint} variant="outline" disabled={yearlyTransactions.length === 0}>
                     <Printer className="mr-2 h-4 w-4" />
                     Print Financial Summary
                   </Button>
               </div>
             </CardContent>
+          </Card>
+          <Card className="no-print">
+            <CardHeader>
+                <CardTitle>Profit &amp; Loss Statement</CardTitle>
+                <CardDescription>
+                    Summary for the year {selectedYear}.
+                </CardDescription>
+            </CardHeader>
+            <CardContent>
+                <div className="grid gap-4 sm:grid-cols-3">
+                    <div className="flex flex-col p-4 bg-secondary/50 rounded-lg">
+                        <span className="text-sm text-muted-foreground">Total Income</span>
+                        <span className="text-2xl font-semibold">{formatCurrency(aggregatedData.totalRevenue, settings.currency)}</span>
+                    </div>
+                    <div className="flex flex-col p-4 bg-secondary/50 rounded-lg">
+                        <span className="text-sm text-muted-foreground">Total Expenses</span>
+                        <span className="text-2xl font-semibold">{formatCurrency(aggregatedData.totalExpenses, settings.currency)}</span>
+                    </div>
+                     <div className="flex flex-col p-4 bg-secondary/50 rounded-lg">
+                        <span className="text-sm text-muted-foreground">Net Profit</span>
+                        <span className={`text-2xl font-semibold ${aggregatedData.netProfit >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                            {formatCurrency(aggregatedData.netProfit, settings.currency)}
+                        </span>
+                    </div>
+                </div>
+            </CardContent>
+            <CardFooter>
+                 <Button onClick={generatePnlCSV} disabled={pnlData.length === 0}>
+                    <Download className="mr-2 h-4 w-4" />
+                    Export P&amp;L as CSV
+                </Button>
+            </CardFooter>
           </Card>
       </main>
         
