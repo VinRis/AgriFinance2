@@ -3,11 +3,14 @@ import { notFound, usePathname } from 'next/navigation';
 import { Card, CardHeader, CardTitle, CardContent, CardDescription } from '@/components/ui/card';
 import { useAppContext } from '@/contexts/app-context';
 import { LivestockType, AgriTransaction } from '@/lib/types';
-import { DollarSign, TrendingUp, TrendingDown, BookOpen, Lightbulb } from 'lucide-react';
+import { DollarSign, TrendingUp, TrendingDown, BookOpen, Lightbulb, Filter } from 'lucide-react';
 import { Bar, BarChart, ResponsiveContainer, XAxis, YAxis, Tooltip, CartesianGrid, Pie, PieChart, Cell, Legend } from 'recharts';
 import { useMemo, useState } from 'react';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Button } from '@/components/ui/button';
+import { Label } from '@/components/ui/label';
 
 interface AggregatedData {
   totalRevenue: number;
@@ -169,57 +172,95 @@ export default function DashboardPage() {
     'hsl(var(--chart-5))',
     'hsl(var(--accent))',
   ], []);
+  
+  const getFilterLabel = () => {
+    switch (filterType) {
+      case 'all': return 'All Time';
+      case 'ytd': return 'Year to Date';
+      case 'year': return `Year: ${selectedYear}`;
+      case 'month': return `${months.find(m => m.value === selectedMonth)?.label} ${selectedYear}`;
+      default: return 'Filter';
+    }
+  }
 
   return (
     <div className="grid auto-rows-max items-start gap-4 md:gap-8 lg:col-span-3">
-        <Card>
-            <CardHeader>
-                <CardTitle>Filters</CardTitle>
-            </CardHeader>
-            <CardContent className="flex flex-col sm:flex-row gap-4">
-                <Select value={filterType} onValueChange={setFilterType}>
-                    <SelectTrigger className="w-full sm:w-[180px]">
-                        <SelectValue placeholder="Select Filter" />
-                    </SelectTrigger>
-                    <SelectContent>
-                        <SelectItem value="all">All Time</SelectItem>
-                        <SelectItem value="ytd">Year to Date</SelectItem>
-                        <SelectItem value="year">By Year</SelectItem>
-                        <SelectItem value="month">By Month</SelectItem>
-                    </SelectContent>
-                </Select>
-                {filterType === 'year' && (
-                    <Select value={String(selectedYear)} onValueChange={(v) => setSelectedYear(Number(v))}>
-                         <SelectTrigger className="w-full sm:w-[180px]">
-                            <SelectValue placeholder="Select Year" />
-                        </SelectTrigger>
-                        <SelectContent>
-                            {years.map(y => <SelectItem key={y} value={String(y)}>{y}</SelectItem>)}
-                        </SelectContent>
-                    </Select>
-                )}
-                 {filterType === 'month' && (
-                    <>
-                         <Select value={String(selectedYear)} onValueChange={(v) => setSelectedYear(Number(v))}>
-                            <SelectTrigger className="w-full sm:w-[180px]">
-                                <SelectValue placeholder="Select Year" />
-                            </SelectTrigger>
-                            <SelectContent>
-                                {years.map(y => <SelectItem key={y} value={String(y)}>{y}</SelectItem>)}
-                            </SelectContent>
-                        </Select>
-                        <Select value={String(selectedMonth)} onValueChange={(v) => setSelectedMonth(Number(v))}>
-                            <SelectTrigger className="w-full sm:w-[180px]">
-                                <SelectValue placeholder="Select Month" />
-                            </SelectTrigger>
-                            <SelectContent>
-                                {months.map(m => <SelectItem key={m.value} value={String(m.value)}>{m.label}</SelectItem>)}
-                            </SelectContent>
-                        </Select>
-                    </>
-                )}
-            </CardContent>
-        </Card>
+        <div className="flex justify-end">
+            <Popover>
+                <PopoverTrigger asChild>
+                    <Button variant="outline">
+                        <Filter className="mr-2 h-4 w-4" />
+                        {getFilterLabel()}
+                    </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-80">
+                    <div className="grid gap-4">
+                        <div className="space-y-2">
+                            <h4 className="font-medium leading-none">Filters</h4>
+                            <p className="text-sm text-muted-foreground">
+                                Select a time period to view data.
+                            </p>
+                        </div>
+                        <div className="grid gap-2">
+                           <div className="grid grid-cols-3 items-center gap-4">
+                                <Label htmlFor="filter-type">Period</Label>
+                                <Select value={filterType} onValueChange={setFilterType}>
+                                    <SelectTrigger id="filter-type" className="col-span-2 h-8">
+                                        <SelectValue placeholder="Select Filter" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        <SelectItem value="all">All Time</SelectItem>
+                                        <SelectItem value="ytd">Year to Date</SelectItem>
+                                        <SelectItem value="year">By Year</SelectItem>
+                                        <SelectItem value="month">By Month</SelectItem>
+                                    </SelectContent>
+                                </Select>
+                            </div>
+                             {filterType === 'year' && (
+                               <div className="grid grid-cols-3 items-center gap-4">
+                                    <Label htmlFor="year-select">Year</Label>
+                                    <Select value={String(selectedYear)} onValueChange={(v) => setSelectedYear(Number(v))}>
+                                        <SelectTrigger id="year-select" className="col-span-2 h-8">
+                                            <SelectValue placeholder="Select Year" />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                            {years.map(y => <SelectItem key={y} value={String(y)}>{y}</SelectItem>)}
+                                        </SelectContent>
+                                    </Select>
+                               </div>
+                            )}
+                            {filterType === 'month' && (
+                                <>
+                                    <div className="grid grid-cols-3 items-center gap-4">
+                                        <Label htmlFor="month-year-select">Year</Label>
+                                         <Select value={String(selectedYear)} onValueChange={(v) => setSelectedYear(Number(v))}>
+                                            <SelectTrigger id="month-year-select" className="col-span-2 h-8">
+                                                <SelectValue placeholder="Select Year" />
+                                            </SelectTrigger>
+                                            <SelectContent>
+                                                {years.map(y => <SelectItem key={y} value={String(y)}>{y}</SelectItem>)}
+                                            </SelectContent>
+                                        </Select>
+                                    </div>
+                                    <div className="grid grid-cols-3 items-center gap-4">
+                                        <Label htmlFor="month-select">Month</Label>
+                                        <Select value={String(selectedMonth)} onValueChange={(v) => setSelectedMonth(Number(v))}>
+                                            <SelectTrigger id="month-select" className="col-span-2 h-8">
+                                                <SelectValue placeholder="Select Month" />
+                                            </SelectTrigger>
+                                            <SelectContent>
+                                                {months.map(m => <SelectItem key={m.value} value={String(m.value)}>{m.label}</SelectItem>)}
+                                            </SelectContent>
+                                        </Select>
+                                    </div>
+                                </>
+                            )}
+                        </div>
+                    </div>
+                </PopoverContent>
+            </Popover>
+        </div>
+
 
        <div className="grid grid-cols-2 gap-4 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-4">
             <KPICard
@@ -354,3 +395,5 @@ export default function DashboardPage() {
     </div>
   );
 }
+
+    
