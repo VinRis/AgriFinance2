@@ -144,7 +144,7 @@ export default function SettingsPage() {
                     <MessageSquare className="h-5 w-5 text-muted-foreground" />
                     <div>
                         <h4 className="font-medium">WhatsApp</h4>
-                        <a href="https://wa.me/254732364559" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">+254732364559</a>
+                        <a href="https://wa.me/254732364559" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">Click to chat on WhatsApp</a>
                     </div>
                 </div>
             </CardContent>
