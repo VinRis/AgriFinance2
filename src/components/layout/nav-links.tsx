@@ -1,15 +1,28 @@
 'use client';
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
-import { BookCopy, FileText, LayoutDashboard, Milk, Settings, Bird, Home } from 'lucide-react';
+import { usePathname, useRouter } from 'next/navigation';
+import { BookCopy, FileText, LayoutDashboard, Settings, Home } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { useLocalStorage } from '@/hooks/use-local-storage';
+import { useEffect } from 'react';
 
 export function NavLinks() {
   const pathname = usePathname();
+  const router = useRouter();
   const segments = pathname.split('/');
-  const livestockType = segments.includes('dairy') ? 'dairy' : segments.includes('poultry') ? 'poultry' : null;
+  const [lastSelectedType, setLastSelectedType] = useLocalStorage<string>('last-livestock-type', 'dairy');
+  
+  const pathLivestockType = segments.includes('dairy') ? 'dairy' : segments.includes('poultry') ? 'poultry' : null;
+  
+  useEffect(() => {
+    if (pathLivestockType) {
+      setLastSelectedType(pathLivestockType);
+    }
+  }, [pathLivestockType, setLastSelectedType]);
 
-  if (!livestockType) return null;
+  const livestockType = pathLivestockType || lastSelectedType;
+
+  if (pathname === '/') return null;
 
   const navItems = [
     {
@@ -38,6 +51,7 @@ export function NavLinks() {
     if (href.includes('dashboard')) return pathname.includes('dashboard');
     if (href.includes('records')) return pathname.includes('records');
     if (href.includes('reports')) return pathname.includes('reports');
+    if (href.includes('settings')) return pathname.includes('settings');
     return pathname === href;
   };
   
