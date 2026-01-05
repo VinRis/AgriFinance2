@@ -1,6 +1,6 @@
 'use client';
 
-import React, { createContext, useContext, useReducer, ReactNode, useEffect, useMemo } from 'react';
+import React, { createContext, useContext, useReducer, ReactNode, useEffect, useMemo, useState } from 'react';
 import { AgriTransaction, AppSettings, LivestockType } from '@/lib/types';
 import { useLocalStorage } from '@/hooks/use-local-storage';
 
@@ -38,7 +38,11 @@ const defaultState: State = {
 function appReducer(state: State, action: Action): State {
   switch (action.type) {
     case 'SET_STATE':
-        return action.payload;
+        // Ensure that transactions are always an array
+        return {
+          settings: { ...defaultSettings, ...(action.payload.settings || {}) },
+          transactions: action.payload.transactions || [],
+        };
     case 'ADD_TRANSACTION':
       return { ...state, transactions: [...state.transactions, action.payload] };
     case 'UPDATE_TRANSACTION':
@@ -57,25 +61,47 @@ function appReducer(state: State, action: Action): State {
 
 export const AppProvider = ({ children }: { children: ReactNode }) => {
   const [storedState, setStoredState] = useLocalStorage<State>('agri-finance-pro-data', defaultState);
+  const [isHydrated, setIsHydrated] = useState(false);
 
   const initialState = useMemo(() => {
+    if (!isHydrated) {
+      return defaultState;
+    }
     const transactions = storedState.transactions || [];
     const settings = { ...defaultSettings, ...(storedState.settings || {}) };
     return { transactions, settings };
-  }, [storedState]);
+  }, [storedState, isHydrated]);
 
   const [state, dispatch] = useReducer(appReducer, initialState);
 
   useEffect(() => {
-    setStoredState(state);
-  }, [state, setStoredState]);
+    setIsHydrated(true);
+  }, []);
+
+  useEffect(() => {
+    if (isHydrated) {
+      dispatch({ type: 'SET_STATE', payload: storedState });
+    }
+  }, [isHydrated, storedState]);
+
+  useEffect(() => {
+    if (isHydrated) {
+      setStoredState(state);
+    }
+  }, [state, setStoredState, isHydrated]);
 
   const getTransactions = (type: LivestockType) => {
     return state.transactions.filter(transaction => transaction.livestockType === type);
   };
 
+  const contextValue = useMemo(() => ({
+    ...state,
+    dispatch,
+    getTransactions
+  }), [state]);
+
   return (
-    <AppContext.Provider value={{ ...state, dispatch, getTransactions }}>
+    <AppContext.Provider value={contextValue}>
       {children}
     </AppContext.Provider>
   );
