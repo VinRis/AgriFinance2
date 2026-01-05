@@ -366,7 +366,7 @@ export default function ReportsPage() {
 
              <footer className="text-center text-xs text-gray-400 border-t pt-4">
                 <p>&copy; {new Date().getFullYear()} {settings.farmName}. All rights reserved.</p>
-                <p>AgriFinance Pro - Financial Management Simplified</p>
+                <p>Agri Finance - Financial Management Simplified</p>
             </footer>
           </div>
         </div>

@@ -60,7 +60,7 @@ function appReducer(state: State, action: Action): State {
 }
 
 export const AppProvider = ({ children }: { children: ReactNode }) => {
-  const [storedState, setStoredState] = useLocalStorage<State>('agri-finance-pro-data', defaultState);
+  const [storedState, setStoredState] = useLocalStorage<State>('agri-finance-data', defaultState);
   const [isHydrated, setIsHydrated] = useState(false);
   
   const [state, dispatch] = useReducer(appReducer, defaultState);

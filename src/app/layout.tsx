@@ -6,7 +6,7 @@ import {AppProvider} from '@/contexts/app-context';
 import { PWALifecycle } from '@/components/pwa-lifecycle';
 
 export const metadata: Metadata = {
-  title: 'AgriFinance Pro',
+  title: 'Agri Finance',
   description: 'Financial management for your livestock enterprise.',
   manifest: '/manifest.json'
 };
