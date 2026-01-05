@@ -95,24 +95,22 @@ export default function RecordsPage() {
                     <div className="space-y-4">
                       {transactions.map(t => (
                         <Card key={t.id} className="w-full">
-                          <CardHeader>
-                            <div className="flex justify-between items-start">
-                              <div>
-                                <CardTitle className="text-lg">{t.description || "Transaction"}</CardTitle>
-                                <CardDescription>{new Date(t.date).toLocaleDateString()}</CardDescription>
-                              </div>
-                              <div className={`text-lg font-bold ${t.transactionType === 'income' ? 'text-green-600' : 'text-red-600'}`}>
-                                {t.transactionType === 'income' ? '+' : '-'}
-                                {settings.currency}{t.amount.toFixed(2)}
-                              </div>
+                           <CardContent className="p-4 flex items-center justify-between">
+                            <div className="flex-1">
+                                <p className="font-semibold">{t.description || "Transaction"}</p>
+                                <p className="text-sm text-muted-foreground">{new Date(t.date).toLocaleDateString()}</p>
+                                 <Badge variant="outline" className="mt-2">{t.category}</Badge>
                             </div>
-                          </CardHeader>
-                          <CardContent>
-                            <Badge variant="outline">{t.category}</Badge>
-                          </CardContent>
-                          <CardFooter className="flex justify-end">
-                            <Actions transaction={t} />
-                          </CardFooter>
+                            <div className="text-right">
+                                <div className={`text-lg font-bold ${t.transactionType === 'income' ? 'text-green-600' : 'text-red-600'}`}>
+                                    {t.transactionType === 'income' ? '+' : '-'}
+                                    {settings.currency}{t.amount.toFixed(2)}
+                                </div>
+                                <div className="mt-2">
+                                    <Actions transaction={t} />
+                                </div>
+                            </div>
+                           </CardContent>
                         </Card>
                       ))}
                     </div>
