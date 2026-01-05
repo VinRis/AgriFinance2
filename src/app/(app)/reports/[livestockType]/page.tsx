@@ -189,7 +189,6 @@ export default function ReportsPage() {
   return (
     <>
       <main className="grid auto-rows-max items-start gap-4 md:gap-8 lg:col-span-3">
-        <div className="grid auto-rows-max items-start gap-4 md:gap-8">
           <Card className="no-print w-full">
             <CardHeader>
               <CardTitle>{title}</CardTitle>
@@ -259,7 +258,6 @@ export default function ReportsPage() {
                 </p>
               </CardContent>
           </Card>
-        </div>
       </main>
         
       {/* Printable Report Layout */}
@@ -286,33 +284,37 @@ export default function ReportsPage() {
                   </div>
                   
                   {aggregatedData.totalTransactions > 0 ? (
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-8 pt-8" style={{minHeight: '350px'}}>
+                    <div className="grid grid-cols-2 gap-8 pt-8" style={{minHeight: '350px'}}>
                         <div>
                             <h3 className="text-base sm:text-lg font-semibold text-gray-700 mb-4 text-center">Income vs. Expenses</h3>
-                            <ResponsiveContainer width="100%" height={250}>
-                                <BarChart data={[{ name: 'Financials', revenue: aggregatedData.totalRevenue, expenses: aggregatedData.totalExpenses }]}>
-                                    <XAxis dataKey="name" stroke="#888" fontSize={10} />
-                                    <YAxis stroke="#888" fontSize={10} tickFormatter={(v) => `${settings.currency}${v.toLocaleString('en-US')}`} />
-                                    <Tooltip formatter={(v: number) => formatCurrency(v, settings.currency)} />
-                                    <Legend wrapperStyle={{fontSize: "10px"}}/>
-                                    <Bar dataKey="revenue" fill="#22c55e" name="Revenue" />
-                                    <Bar dataKey="expenses" fill="#ef4444" name="Expenses" />
-                                </BarChart>
-                            </ResponsiveContainer>
+                            <BarChart 
+                                width={400} height={250} 
+                                data={[{ name: 'Financials', revenue: aggregatedData.totalRevenue, expenses: aggregatedData.totalExpenses }]}
+                                isAnimationActive={false}
+                            >
+                                <XAxis dataKey="name" stroke="#888" fontSize={10} />
+                                <YAxis stroke="#888" fontSize={10} tickFormatter={(v) => `${settings.currency}${v.toLocaleString('en-US')}`} />
+                                <Tooltip formatter={(v: number) => formatCurrency(v, settings.currency)} />
+                                <Legend wrapperStyle={{fontSize: "10px"}}/>
+                                <Bar dataKey="revenue" fill="#22c55e" name="Revenue" />
+                                <Bar dataKey="expenses" fill="#ef4444" name="Expenses" />
+                            </BarChart>
                         </div>
                         <div>
                             <h3 className="text-base sm:text-lg font-semibold text-gray-700 mb-4 text-center">Expense Breakdown</h3>
-                            <ResponsiveContainer width="100%" height={250}>
-                                <PieChart>
-                                    <Pie data={aggregatedData.expensesByCategory} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={80}>
-                                        {aggregatedData.expensesByCategory.map((entry, index) => (
-                                            <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                                        ))}
-                                    </Pie>
-                                    <Tooltip formatter={(v: number) => formatCurrency(v, settings.currency)} />
-                                    <Legend wrapperStyle={{fontSize: "10px", bottom: -5}} iconSize={10}/>
-                                </PieChart>
-                            </ResponsiveContainer>
+                             <PieChart width={400} height={250}>
+                                <Pie 
+                                    data={aggregatedData.expensesByCategory} 
+                                    dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={80}
+                                    isAnimationActive={false}
+                                >
+                                    {aggregatedData.expensesByCategory.map((entry, index) => (
+                                        <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                                    ))}
+                                </Pie>
+                                <Tooltip formatter={(v: number) => formatCurrency(v, settings.currency)} />
+                                <Legend wrapperStyle={{fontSize: "10px", bottom: -5}} iconSize={10}/>
+                            </PieChart>
                         </div>
                     </div>
                   ) : (
