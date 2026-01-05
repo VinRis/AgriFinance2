@@ -2,7 +2,7 @@
 import Image from 'next/image';
 import Link from 'next/link';
 import { PlaceHolderImages } from '@/lib/placeholder-images';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { ArrowRight, Download, Upload, Lightbulb } from 'lucide-react';
 import { useAppContext } from '@/contexts/app-context';
 import { useToast } from '@/hooks/use-toast';
@@ -114,7 +114,7 @@ export default function LivestockSelectionPage() {
   ];
 
   return (
-    <main className="flex min-h-screen w-full flex-col items-center justify-center bg-gradient-to-br from-background to-secondary p-4 sm:p-8">
+    <main className="flex min-h-screen w-full flex-col items-center justify-center bg-gradient-to-br from-background to-secondary/50 p-4 sm:p-6">
       <div className="w-full max-w-4xl text-center">
         <h1 className="font-headline text-4xl font-bold tracking-tight text-primary sm:text-5xl md:text-6xl">
           Welcome to Agri Finance
@@ -126,11 +126,12 @@ export default function LivestockSelectionPage() {
           Select your enterprise to begin
         </p>
       </div>
-      <div className="mt-10 grid w-full max-w-2xl grid-cols-1 gap-8 md:grid-cols-2">
+      <div className="mt-10 grid w-full max-w-3xl grid-cols-1 gap-6 md:grid-cols-2">
         {selectionOptions.map((option) => (
           <Link href={option.href} key={option.type}>
-            <Card className="group transform-gpu overflow-hidden border-2 border-transparent transition-all duration-300 ease-in-out hover:border-primary hover:shadow-2xl hover:scale-105">
-              <CardContent className="relative p-0">
+            <Card className="group transform-gpu overflow-hidden border-2 border-transparent transition-all duration-300 ease-in-out hover:border-primary hover:shadow-lg hover:scale-105 md:hover:scale-105">
+               {/* Desktop View Card */}
+              <CardContent className="relative hidden p-0 md:block">
                 {option.image && (
                   <Image
                     src={option.image.imageUrl}
@@ -151,29 +152,47 @@ export default function LivestockSelectionPage() {
                   </div>
                 </div>
               </CardContent>
+
+              {/* Mobile View Card */}
+               <CardContent className="flex items-center gap-4 p-4 md:hidden">
+                 {option.image && (
+                    <Image
+                      src={option.image.imageUrl}
+                      alt={option.image.description}
+                      width={100}
+                      height={100}
+                      className="h-20 w-20 rounded-lg object-cover"
+                      data-ai-hint={option.image.imageHint}
+                    />
+                  )}
+                  <div className="flex-1">
+                      <h2 className="font-headline text-xl font-bold text-foreground">{option.type}</h2>
+                      <p className="text-sm text-muted-foreground">{option.description}</p>
+                  </div>
+                  <ArrowRight className="h-5 w-5 text-muted-foreground transition-transform group-hover:translate-x-1" />
+               </CardContent>
             </Card>
           </Link>
         ))}
       </div>
-       <div className="mt-12 grid w-full max-w-2xl gap-8">
-        <Card>
-            <CardHeader className="flex-row items-center gap-4 space-y-0 pb-2">
-              <Lightbulb className="h-6 w-6 text-primary" />
-              <CardTitle>Farm Tip</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="text-sm text-foreground/90">
-                {randomTip ? `Did you know? ${randomTip}` : 'Loading a helpful tip...'}
-              </p>
-            </CardContent>
-        </Card>
-        <Card>
+       <div className="mt-8 grid w-full max-w-3xl gap-6">
+         <Card>
            <CardHeader>
-              <CardTitle>Manage Your Data</CardTitle>
+              <CardTitle>Tools & Tips</CardTitle>
+              <CardDescription>Backup your data and learn something new.</CardDescription>
             </CardHeader>
-          <CardContent className="flex flex-col gap-4">
-             <div className="flex flex-col items-center justify-center gap-4 sm:flex-row">
-                <div className="flex flex-col gap-4 sm:flex-row">
+          <CardContent className="flex flex-col gap-6">
+              <div className="flex items-start gap-4 rounded-lg border p-4">
+                  <Lightbulb className="h-6 w-6 flex-shrink-0 text-primary" />
+                  <div>
+                      <h4 className="font-semibold">Farm Tip</h4>
+                      <p className="text-sm text-foreground/90">
+                        {randomTip ? randomTip : 'Loading a helpful tip...'}
+                      </p>
+                  </div>
+              </div>
+             <div className="flex flex-col items-center justify-center gap-4 rounded-lg border p-4">
+                 <div className="flex flex-col gap-4 sm:flex-row">
                   <Button onClick={handleBackup}>
                     <Download className="mr-2" />
                     Backup Data
@@ -190,10 +209,10 @@ export default function LivestockSelectionPage() {
                     className="hidden"
                   />
                 </div>
+                <p className="text-xs text-muted-foreground text-center mt-2">
+                    Keep a weekly backup to prevent data loss.
+                </p>
             </div>
-            <p className="text-xs text-muted-foreground text-center">
-                Keep a backup of your data at least once a week to avoid loss of data in case of changing or losing your phone.
-            </p>
           </CardContent>
         </Card>
       </div>
