@@ -67,6 +67,7 @@ export default function RecordsPage({ params }: { params: { livestockType: strin
                         <TableRow>
                             <TableHead>Date</TableHead>
                             <TableHead className="text-right">Revenue</TableHead>
+                            <TableHead className="text-right">Expenses</TableHead>
                             <TableHead className="text-right">Actions</TableHead>
                         </TableRow>
                     </TableHeader>
@@ -75,6 +76,7 @@ export default function RecordsPage({ params }: { params: { livestockType: strin
                             <TableRow key={record.id}>
                                 <TableCell>{new Date(record.date).toLocaleDateString()}</TableCell>
                                 <TableCell className="text-right">{settings.currency} {record.revenue.toFixed(2)}</TableCell>
+                                <TableCell className="text-right">{settings.currency} {record.expenses.toFixed(2)}</TableCell>
                                 <TableCell className="text-right">
                                     <Button variant="ghost" size="icon" onClick={() => handleEdit(record)}>
                                         <Edit className="h-4 w-4" />

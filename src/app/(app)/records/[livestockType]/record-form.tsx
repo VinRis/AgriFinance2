@@ -9,7 +9,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetFooter, SheetClose } from '@/components/ui/sheet';
 import { useAppContext } from '@/contexts/app-context';
-import { LivestockType, AgriRecord, DairyRecord, PoultryRecord } from '@/lib/types';
+import { LivestockType, AgriRecord } from '@/lib/types';
 import { useToast } from '@/hooks/use-toast';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { CalendarIcon } from 'lucide-react';
@@ -24,45 +24,34 @@ type RecordFormProps = {
   record?: AgriRecord | null;
 };
 
-const baseSchema = z.object({
+const formSchema = z.object({
   date: z.date({ required_error: 'A date is required.' }),
   revenue: z.coerce.number().min(0, 'Revenue must be a positive number'),
+  expenses: z.coerce.number().min(0, 'Expenses must be a positive number'),
   notes: z.string().optional(),
-});
-
-const dairySchema = baseSchema.extend({
-  milkProduction: z.coerce.number().min(0, 'Milk production must be a positive number'),
-  feedConsumed: z.coerce.number().min(0, 'Feed consumed must be a positive number'),
-});
-
-const poultrySchema = baseSchema.extend({
-  eggsCollected: z.coerce.number().int().min(0, 'Eggs collected must be a whole number'),
-  mortality: z.coerce.number().int().min(0, 'Mortality must be a whole number'),
-  feedConsumed: z.coerce.number().min(0, 'Feed consumed must be a positive number'),
 });
 
 export function RecordForm({ livestockType, isOpen, onClose, record }: RecordFormProps) {
   const { dispatch } = useAppContext();
   const { toast } = useToast();
-  const schema = livestockType === 'dairy' ? dairySchema : poultrySchema;
 
-  const form = useForm<z.infer<typeof schema>>({
-    resolver: zodResolver(schema),
+  const form = useForm<z.infer<typeof formSchema>>({
+    resolver: zodResolver(formSchema),
     defaultValues: record 
       ? { ...record, date: new Date(record.date) }
-      : { revenue: 0, notes: '', feedConsumed: 0, ...(livestockType === 'dairy' ? { milkProduction: 0 } : { eggsCollected: 0, mortality: 0 })},
+      : { revenue: 0, expenses: 0, notes: ''},
   });
   
   useEffect(() => {
     if (isOpen) {
        form.reset(record 
         ? { ...record, date: new Date(record.date) }
-        : { revenue: 0, notes: '', date: new Date(), feedConsumed: 0, ...(livestockType === 'dairy' ? { milkProduction: 0 } : { eggsCollected: 0, mortality: 0 })}
+        : { revenue: 0, expenses: 0, notes: '', date: new Date()}
       );
     }
-  }, [isOpen, record, form, livestockType]);
+  }, [isOpen, record, form]);
 
-  const onSubmit: SubmitHandler<z.infer<typeof schema>> = (data) => {
+  const onSubmit: SubmitHandler<z.infer<typeof formSchema>> = (data) => {
     const recordData = {
       ...data,
       id: record ? record.id : new Date().toISOString() + Math.random(),
@@ -143,59 +132,14 @@ export function RecordForm({ livestockType, isOpen, onClose, record }: RecordFor
                   </FormItem>
                 )}
               />
-              {livestockType === 'dairy' && (
-                <FormField
-                  control={form.control}
-                  name="milkProduction"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Milk Production (Liters)</FormLabel>
-                      <FormControl>
-                        <Input type="number" step="0.1" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              )}
-              {livestockType === 'poultry' && (
-                <>
-                  <FormField
-                    control={form.control}
-                    name="eggsCollected"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Eggs Collected</FormLabel>
-                        <FormControl>
-                          <Input type="number" {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  <FormField
-                    control={form.control}
-                    name="mortality"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Mortality</FormLabel>
-                        <FormControl>
-                          <Input type="number" {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                </>
-              )}
                <FormField
                   control={form.control}
-                  name="feedConsumed"
+                  name="expenses"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Feed Consumed (kg)</FormLabel>
+                      <FormLabel>Expenses</FormLabel>
                       <FormControl>
-                        <Input type="number" step="0.1" {...field} />
+                        <Input type="number" step="0.01" {...field} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>

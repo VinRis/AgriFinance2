@@ -3,27 +3,18 @@ import { notFound } from 'next/navigation';
 import { Card, CardHeader, CardTitle, CardContent, CardDescription } from '@/components/ui/card';
 import { useAppContext } from '@/contexts/app-context';
 import { LivestockType } from '@/lib/types';
-import { DollarSign, TrendingUp, TrendingDown, Scale } from 'lucide-react';
+import { DollarSign, TrendingUp, TrendingDown, BookOpen } from 'lucide-react';
 import { Bar, BarChart, ResponsiveContainer, XAxis, YAxis, Tooltip } from 'recharts';
 
 function kpiReducer(
   acc: {
     totalRevenue: number;
     totalExpenses: number;
-    totalMilk: number;
-    totalEggs: number;
   },
   record: any
 ) {
   acc.totalRevenue += record.revenue;
-
-  if (record.type === 'dairy') {
-    acc.totalExpenses += record.feedConsumed * 0.5; // Dummy expense calculation
-    acc.totalMilk += record.milkProduction;
-  } else if (record.type === 'poultry') {
-    acc.totalExpenses += record.feedConsumed * 0.3; // Dummy expense calculation
-    acc.totalEggs += record.eggsCollected;
-  }
+  acc.totalExpenses += record.expenses;
   return acc;
 }
 
@@ -37,11 +28,9 @@ export default function DashboardPage({ params }: { params: { livestockType: str
 
   const records = getRecords(livestockType as LivestockType);
 
-  const { totalRevenue, totalExpenses, totalMilk, totalEggs } = records.reduce(kpiReducer, {
+  const { totalRevenue, totalExpenses } = records.reduce(kpiReducer, {
     totalRevenue: 0,
     totalExpenses: 0,
-    totalMilk: 0,
-    totalEggs: 0,
   });
 
   const netProfit = totalRevenue - totalExpenses;
@@ -51,7 +40,7 @@ export default function DashboardPage({ params }: { params: { livestockType: str
     .map(r => ({
       date: new Date(r.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
       revenue: r.revenue,
-      expenses: r.type === 'dairy' ? r.feedConsumed * 0.5 : r.feedConsumed * 0.3,
+      expenses: r.expenses,
     })).slice(-30); // Last 30 records
 
 
@@ -77,31 +66,22 @@ export default function DashboardPage({ params }: { params: { livestockType: str
                 icon={DollarSign}
                 description="Total income from sales."
             />
+             <KPICard
+                title="Total Expenses"
+                value={`${settings.currency} ${totalExpenses.toFixed(2)}`}
+                icon={DollarSign}
+                description="Total expenses incurred."
+            />
             <KPICard
                 title="Net Profit"
                 value={`${settings.currency} ${netProfit.toFixed(2)}`}
                 icon={netProfit >= 0 ? TrendingUp : TrendingDown}
-                description="Profit after estimated expenses."
+                description="Profit after expenses."
             />
-            {livestockType === 'dairy' ? (
-                <KPICard
-                    title="Milk Production"
-                    value={`${totalMilk.toFixed(2)} L`}
-                    icon={Scale}
-                    description="Total milk produced."
-                />
-            ) : (
-                 <KPICard
-                    title="Egg Collection"
-                    value={`${totalEggs} units`}
-                    icon={Scale}
-                    description="Total eggs collected."
-                />
-            )}
             <KPICard
                 title="Records"
                 value={records.length.toString()}
-                icon={TrendingUp}
+                icon={BookOpen}
                 description="Total number of entries."
             />
        </div>
