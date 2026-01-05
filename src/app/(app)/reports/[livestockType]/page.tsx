@@ -188,7 +188,7 @@ export default function ReportsPage() {
 
   return (
     <div className="grid auto-rows-max items-start gap-4 md:gap-8 lg:col-span-3">
-        <Card className="no-print">
+        <Card className="no-print w-full">
           <CardHeader>
             <CardTitle>{title}</CardTitle>
              <CardDescription>
@@ -210,7 +210,7 @@ export default function ReportsPage() {
           </CardContent>
         </Card>
 
-        <Card className="no-print">
+        <Card className="no-print w-full">
             <CardHeader>
                 <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                     <div>
@@ -219,7 +219,7 @@ export default function ReportsPage() {
                             Yearly financial performance by month for {selectedYear}.
                         </CardDescription>
                     </div>
-                    <div className="flex items-center gap-2 self-start sm:self-center">
+                    <div className="flex items-center gap-2 self-start sm:self-center w-full sm:w-auto">
                         <Select value={String(selectedYear)} onValueChange={(v) => setSelectedYear(Number(v))}>
                             <SelectTrigger className="w-full sm:w-[180px]">
                                 <SelectValue placeholder="Select Year" />
