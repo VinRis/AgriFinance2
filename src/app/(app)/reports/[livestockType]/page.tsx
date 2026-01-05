@@ -1,20 +1,24 @@
 'use client';
-import { notFound } from 'next/navigation';
+import { notFound, usePathname } from 'next/navigation';
 import { Card, CardHeader, CardTitle, CardContent, CardDescription } from '@/components/ui/card';
 import { LivestockType } from '@/lib/types';
 import { useAppContext } from '@/contexts/app-context';
 import { Button } from '@/components/ui/button';
 import { Download } from 'lucide-react';
 
-export default function ReportsPage({ params }: { params: { livestockType: string } }) {
+export default function ReportsPage() {
+  const pathname = usePathname();
+  const segments = pathname.split('/');
+  const livestockType = segments[segments.length - 1] as LivestockType;
+
   const { getTransactions, settings } = useAppContext();
 
-  if (params.livestockType !== 'dairy' && params.livestockType !== 'poultry') {
+  if (livestockType !== 'dairy' && livestockType !== 'poultry') {
     notFound();
   }
   
-  const title = params.livestockType === 'dairy' ? 'Dairy Reports' : 'Poultry Reports';
-  const transactions = getTransactions(params.livestockType as LivestockType);
+  const title = livestockType === 'dairy' ? 'Dairy Reports' : 'Poultry Reports';
+  const transactions = getTransactions(livestockType);
 
   const generateCSV = () => {
     if (transactions.length === 0) return;
@@ -33,7 +37,7 @@ export default function ReportsPage({ params }: { params: { livestockType: strin
     }
     const url = URL.createObjectURL(blob);
     link.href = url;
-    link.setAttribute('download', `${params.livestockType}-report.csv`);
+    link.setAttribute('download', `${livestockType}-report.csv`);
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);

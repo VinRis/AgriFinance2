@@ -1,9 +1,9 @@
 'use client';
 import { useState } from 'react';
-import { notFound } from 'next/navigation';
+import { notFound, usePathname } from 'next/navigation';
 import { Card, CardHeader, CardTitle, CardContent, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { PlusCircle, Trash2, Edit } from 'lucide-react';
+import { Trash2, Edit } from 'lucide-react';
 import { LivestockType, AgriTransaction } from '@/lib/types';
 import { useAppContext } from '@/contexts/app-context';
 import { RecordForm } from './record-form';
@@ -12,18 +12,22 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { useToast } from '@/hooks/use-toast';
 import { Badge } from '@/components/ui/badge';
 
-export default function RecordsPage({ params }: { params: { livestockType: string } }) {
+export default function RecordsPage() {
+  const pathname = usePathname();
+  const segments = pathname.split('/');
+  const livestockType = segments[segments.length - 1] as LivestockType;
+
   const { getTransactions, dispatch, settings } = useAppContext();
   const { toast } = useToast();
   const [isFormOpen, setFormOpen] = useState(false);
   const [selectedTransaction, setSelectedTransaction] = useState<AgriTransaction | null>(null);
 
-  if (params.livestockType !== 'dairy' && params.livestockType !== 'poultry') {
+  if (livestockType !== 'dairy' && livestockType !== 'poultry') {
     notFound();
   }
 
-  const title = params.livestockType === 'dairy' ? 'Dairy Transactions' : 'Poultry Transactions';
-  const transactions = getTransactions(params.livestockType as LivestockType).sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+  const title = livestockType === 'dairy' ? 'Dairy Transactions' : 'Poultry Transactions';
+  const transactions = getTransactions(livestockType).sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
 
   const handleEdit = (transaction: AgriTransaction) => {
     setSelectedTransaction(transaction);
@@ -114,7 +118,7 @@ export default function RecordsPage({ params }: { params: { livestockType: strin
           </CardContent>
         </Card>
         <RecordForm 
-            livestockType={params.livestockType as LivestockType}
+            livestockType={livestockType}
             isOpen={isFormOpen}
             onClose={closeForm}
             transaction={selectedTransaction}

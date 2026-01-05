@@ -1,5 +1,5 @@
 'use client';
-import { notFound } from 'next/navigation';
+import { notFound, usePathname } from 'next/navigation';
 import { Card, CardHeader, CardTitle, CardContent, CardDescription } from '@/components/ui/card';
 import { useAppContext } from '@/contexts/app-context';
 import { LivestockType, AgriTransaction } from '@/lib/types';
@@ -56,14 +56,18 @@ function aggregateData(transactions: AgriTransaction[]): AggregatedData {
 }
 
 
-export default function DashboardPage({ params }: { params: { livestockType: string } }) {
+export default function DashboardPage() {
+  const pathname = usePathname();
+  const segments = pathname.split('/');
+  const livestockType = segments[segments.length - 1] as LivestockType;
+  
   const { getTransactions, settings } = useAppContext();
 
-  if (params.livestockType !== 'dairy' && params.livestockType !== 'poultry') {
+  if (livestockType !== 'dairy' && livestockType !== 'poultry') {
     notFound();
   }
 
-  const transactions = getTransactions(params.livestockType as LivestockType);
+  const transactions = getTransactions(livestockType);
   const { totalRevenue, totalExpenses, netProfit, totalTransactions, chartData } = aggregateData(transactions);
   
   const KPICard = ({ title, value, icon: Icon, description }: { title: string; value: string; icon: React.ElementType, description: string }) => (
