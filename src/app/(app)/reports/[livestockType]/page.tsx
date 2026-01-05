@@ -4,7 +4,7 @@ import { Card, CardHeader, CardTitle, CardContent, CardDescription } from '@/com
 import { LivestockType } from '@/lib/types';
 import { useAppContext } from '@/contexts/app-context';
 import { Button } from '@/components/ui/button';
-import { Download, Printer } from 'lucide-react';
+import { Download, Printer, BarChart as BarChartIcon } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useMemo, useState } from 'react';
 import { Bar, BarChart, ResponsiveContainer, XAxis, YAxis, Tooltip, Legend, Pie, PieChart, Cell } from 'recharts';
@@ -76,25 +76,6 @@ export default function ReportsPage() {
     return data;
   }, [transactions, selectedYear]);
   
-  const pnlData = useMemo(() => {
-    const yearlyTransactions = transactions.filter(t => new Date(t.date).getFullYear() === selectedYear);
-    const monthlyData = months.map((month, index) => {
-        const monthTransactions = yearlyTransactions.filter(t => new Date(t.date).getMonth() === index);
-        const income = monthTransactions.filter(t => t.transactionType === 'income').reduce((acc, t) => acc + t.amount, 0);
-        const expenses = monthTransactions.filter(t => t.transactionType === 'expense').reduce((acc, t) => acc + t.amount, 0);
-        return { month, income, expenses, netProfit: income - expenses };
-    });
-
-    const annualTotals = monthlyData.reduce((acc, data) => {
-        acc.income += data.income;
-        acc.expenses += data.expenses;
-        acc.netProfit += data.netProfit;
-        return acc;
-    }, { income: 0, expenses: 0, netProfit: 0 });
-
-    return { monthlyData, annualTotals };
-  }, [transactions, selectedYear]);
-
   const generateFullReportCSV = () => {
     if (transactions.length === 0) {
       toast({
@@ -125,43 +106,13 @@ export default function ReportsPage() {
     document.body.removeChild(link);
   };
   
-  const generatePnLCSV = () => {
-    const { monthlyData, annualTotals } = pnlData;
-    if (monthlyData.every(d => d.income === 0 && d.expenses === 0)) {
-      toast({
-        variant: 'destructive',
-        title: 'No Data to Export',
-        description: `There is no data for the year ${selectedYear}.`
-      });
-      return;
-    }
-
-    const headers = ['Month', 'Income', 'Expenses', 'Net Profit'];
-    const csvRows = [
-      headers.join(','),
-      ...monthlyData.map(d => [d.month, d.income, d.expenses, d.netProfit].join(',')),
-      ['Annual Total', annualTotals.income, annualTotals.expenses, annualTotals.netProfit].join(',')
-    ];
-    const csv = csvRows.join('\n');
-
-    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-    const link = document.createElement('a');
-    const url = URL.createObjectURL(blob);
-    link.href = url;
-    link.setAttribute('download', `${livestockType}-pnl-report-${selectedYear}.csv`);
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    URL.revokeObjectURL(url);
-  };
-  
   const handlePrint = () => {
     window.print();
   };
   
   const generateReportSummary = (data: AggregatedData, currency: string, year: number): string => {
     if (data.totalTransactions === 0) {
-      return `For the year ${year}, there is no financial data to analyze for this enterprise.`;
+      return `For the year ${year}, there is no financial data to analyze for this enterprise. Start by logging some transactions to see a summary here.`;
     }
 
     const { totalRevenue, totalExpenses, netProfit } = data;
@@ -206,72 +157,36 @@ export default function ReportsPage() {
       <main className="grid auto-rows-max items-start gap-4 md:gap-8 lg:col-span-3">
           <Card className="no-print w-full">
             <CardHeader>
-              <CardTitle>{title}</CardTitle>
-              <CardDescription>
-                  Generate and export your financial data.
-              </CardDescription>
+              <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                <div>
+                  <CardTitle>{title}</CardTitle>
+                  <CardDescription>
+                      Generate and export your financial data for {selectedYear}.
+                  </CardDescription>
+                </div>
+                 <Select value={String(selectedYear)} onValueChange={(v) => setSelectedYear(Number(v))}>
+                    <SelectTrigger className="w-full sm:w-[180px]">
+                        <SelectValue placeholder="Select Year" />
+                    </SelectTrigger>
+                    <SelectContent>
+                        {years.map(y => <SelectItem key={y} value={String(y)}>{y}</SelectItem>)}
+                    </SelectContent>
+                </Select>
+              </div>
             </CardHeader>
             <CardContent>
-              <p>You can export all your transaction data as a CSV file or print a professional summary of your records.</p>
-              <div className="mt-6 flex flex-col sm:flex-row gap-4">
+              <p className="text-sm text-muted-foreground mb-6">Use the buttons below to export a full CSV of all transactions or print a professional financial summary for the selected year.</p>
+              <div className="flex flex-col sm:flex-row gap-4">
                   <Button onClick={generateFullReportCSV} disabled={transactions.length === 0}>
                       <Download className="mr-2 h-4 w-4" />
                       Export All as CSV
                   </Button>
-                  <Button onClick={handlePrint} variant="outline">
+                  <Button onClick={handlePrint} variant="outline" disabled={transactions.length === 0}>
                     <Printer className="mr-2 h-4 w-4" />
                     Print Financial Summary
                   </Button>
               </div>
             </CardContent>
-          </Card>
-
-          <Card className="no-print w-full">
-              <CardHeader>
-                  <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-                      <div>
-                          <CardTitle>Profit &amp; Loss Statement</CardTitle>
-                          <CardDescription>
-                              Yearly financial performance summary for {selectedYear}.
-                          </CardDescription>
-                      </div>
-                      <div className="flex items-center gap-2 self-start sm:self-center w-full sm:w-auto">
-                          <Select value={String(selectedYear)} onValueChange={(v) => setSelectedYear(Number(v))}>
-                              <SelectTrigger className="w-full sm:w-[180px]">
-                                  <SelectValue placeholder="Select Year" />
-                              </SelectTrigger>
-                              <SelectContent>
-                                  {years.map(y => <SelectItem key={y} value={String(y)}>{y}</SelectItem>)}
-                              </SelectContent>
-                          </Select>
-                          <Button onClick={generatePnLCSV} variant="outline" size="icon" disabled={pnlData.monthlyData.every(d => d.income === 0 && d.expenses === 0)}>
-                              <Download className="h-4 w-4" />
-                              <span className="sr-only">Export P&amp;L</span>
-                          </Button>
-                      </div>
-                  </div>
-              </CardHeader>
-              <CardContent>
-                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 text-center">
-                    <div className="rounded-lg border bg-card text-card-foreground p-4">
-                        <p className="text-sm font-medium text-muted-foreground">Total Income</p>
-                        <p className="text-2xl font-bold text-green-600">{formatCurrency(pnlData.annualTotals.income, settings.currency)}</p>
-                    </div>
-                     <div className="rounded-lg border bg-card text-card-foreground p-4">
-                        <p className="text-sm font-medium text-muted-foreground">Total Expenses</p>
-                        <p className="text-2xl font-bold text-red-600">{formatCurrency(pnlData.annualTotals.expenses, settings.currency)}</p>
-                    </div>
-                    <div className="rounded-lg border bg-card text-card-foreground p-4">
-                        <p className="text-sm font-medium text-muted-foreground">Net Profit</p>
-                        <p className={`text-2xl font-bold ${pnlData.annualTotals.netProfit >= 0 ? 'text-foreground' : 'text-destructive'}`}>
-                          {formatCurrency(pnlData.annualTotals.netProfit, settings.currency)}
-                        </p>
-                    </div>
-                </div>
-                <p className="text-xs text-muted-foreground mt-4 text-center">
-                    A full monthly P&L breakdown can be downloaded as a CSV file.
-                </p>
-              </CardContent>
           </Card>
       </main>
         
@@ -352,4 +267,3 @@ export default function ReportsPage() {
     </>
   );
 }
-
