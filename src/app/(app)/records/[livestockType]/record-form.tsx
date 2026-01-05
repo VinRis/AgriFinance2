@@ -9,7 +9,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetFooter, SheetClose } from '@/components/ui/sheet';
 import { useAppContext } from '@/contexts/app-context';
-import { LivestockType, AgriTransaction, TransactionType } from '@/lib/types';
+import { LivestockType, AgriTransaction } from '@/lib/types';
 import { useToast } from '@/hooks/use-toast';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { CalendarIcon } from 'lucide-react';
@@ -31,10 +31,12 @@ const formSchema = z.object({
   transactionType: z.enum(['income', 'expense'], { required_error: 'Please select a transaction type.'}),
   category: z.string().min(1, 'Category is required.'),
   amount: z.coerce.number().min(0.01, 'Amount must be greater than 0.'),
-  description: z.string().min(1, 'Description is required.'),
+  description: z.string().optional(),
 });
 
-const incomeCategories = ['Milk Sales', 'Livestock Sales', 'Government Subsidy', 'Other'];
+
+const dairyIncomeCategories = ['Milk Sales', 'Livestock Sales', 'Government Subsidy', 'Other'];
+const poultryIncomeCategories = ['Egg Sales', 'Meat Sales', 'Livestock Sales', 'Other'];
 const expenseCategories = ['Feed', 'Veterinary', 'Labor', 'Utilities', 'Maintenance', 'Rent/Mortgage', 'Other'];
 
 export function RecordForm({ livestockType, isOpen, onClose, transaction }: RecordFormProps) {
@@ -49,6 +51,8 @@ export function RecordForm({ livestockType, isOpen, onClose, transaction }: Reco
   });
 
   const transactionType = form.watch('transactionType');
+
+  const incomeCategories = livestockType === 'poultry' ? poultryIncomeCategories : dairyIncomeCategories;
   const categories = transactionType === 'income' ? incomeCategories : expenseCategories;
   
   useEffect(() => {
@@ -65,7 +69,7 @@ export function RecordForm({ livestockType, isOpen, onClose, transaction }: Reco
     if (!categories.includes(form.getValues('category'))) {
       form.setValue('category', '');
     }
-  }, [transactionType, form, categories]);
+  }, [transactionType, form, categories, livestockType]);
 
   const onSubmit: SubmitHandler<z.infer<typeof formSchema>> = (data) => {
     const transactionData = {
@@ -73,6 +77,7 @@ export function RecordForm({ livestockType, isOpen, onClose, transaction }: Reco
       id: transaction ? transaction.id : new Date().toISOString() + Math.random(),
       date: data.date.toISOString(),
       livestockType: livestockType,
+      description: data.description || '',
     };
     
     if (transaction) {
@@ -199,7 +204,7 @@ export function RecordForm({ livestockType, isOpen, onClose, transaction }: Reco
                   <FormItem>
                     <FormLabel>Description</FormLabel>
                     <FormControl>
-                      <Textarea placeholder="E.g., Sale of 50L of milk" {...field} />
+                      <Textarea placeholder="E.g., Sale of 50L of milk" {...field} value={field.value ?? ''} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
