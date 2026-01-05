@@ -25,6 +25,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
 
   const isRecordsPage = pathname.includes('/records');
   const isTasksPage = pathname.includes('/tasks');
+  const isReportsPage = pathname.includes('/reports');
 
   const renderForm = () => {
     if (isTasksPage) {
@@ -34,6 +35,19 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
         return <RecordForm livestockType={livestockType} isOpen={isFormOpen} onClose={() => setFormOpen(false)} />
     }
     return null;
+  }
+  
+  // Reports page now wraps its own content in <main>, so we exclude it from the default main wrapper here.
+  if (isReportsPage) {
+    return (
+       <div className="flex min-h-screen w-full flex-col bg-muted/40">
+          <Header />
+          <div className="flex flex-col sm:gap-4 flex-grow">
+            {children}
+          </div>
+          <NavLinks />
+      </div>
+    )
   }
 
   return (

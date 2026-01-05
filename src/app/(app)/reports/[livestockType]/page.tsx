@@ -1,10 +1,10 @@
 'use client';
 import { notFound, usePathname } from 'next/navigation';
 import { Card, CardHeader, CardTitle, CardContent, CardDescription } from '@/components/ui/card';
-import { LivestockType, AgriTransaction } from '@/lib/types';
+import { LivestockType } from '@/lib/types';
 import { useAppContext } from '@/contexts/app-context';
 import { Button } from '@/components/ui/button';
-import { Download, Printer, Calendar as CalendarIcon } from 'lucide-react';
+import { Download, Printer } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useMemo, useState } from 'react';
 import { Bar, BarChart, ResponsiveContainer, XAxis, YAxis, Tooltip, Legend, Pie, PieChart, Cell } from 'recharts';
@@ -187,198 +187,202 @@ export default function ReportsPage() {
   );
 
   return (
-    <div className="grid auto-rows-max items-start gap-4 md:gap-8 lg:col-span-3">
-        <Card className="no-print w-full">
-          <CardHeader>
-            <CardTitle>{title}</CardTitle>
-             <CardDescription>
-                Generate and export your financial data.
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <p>You can export all your transaction data as a CSV file or print a professional summary of your records.</p>
-             <div className="mt-6 flex flex-col sm:flex-row gap-4">
-                 <Button onClick={generateFullReportCSV} disabled={transactions.length === 0}>
-                    <Download className="mr-2 h-4 w-4" />
-                    Export All as CSV
-                </Button>
-                <Button onClick={handlePrint} variant="outline">
-                  <Printer className="mr-2 h-4 w-4" />
-                  Print Financial Summary
-                </Button>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card className="no-print w-full">
+    <>
+      <main className="grid flex-1 items-start gap-4 p-4 sm:px-6 sm:py-0 md:gap-8 lg:grid-cols-3 xl:grid-cols-3 mb-20">
+        <div className="grid auto-rows-max items-start gap-4 md:gap-8 lg:col-span-3">
+          <Card className="no-print w-full">
             <CardHeader>
-                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-                    <div>
-                        <CardTitle>Profit & Loss Statement</CardTitle>
-                        <CardDescription>
-                            Yearly financial performance by month for {selectedYear}.
-                        </CardDescription>
-                    </div>
-                    <div className="flex items-center gap-2 self-start sm:self-center w-full sm:w-auto">
-                        <Select value={String(selectedYear)} onValueChange={(v) => setSelectedYear(Number(v))}>
-                            <SelectTrigger className="w-full sm:w-[180px]">
-                                <SelectValue placeholder="Select Year" />
-                            </SelectTrigger>
-                            <SelectContent>
-                                {years.map(y => <SelectItem key={y} value={String(y)}>{y}</SelectItem>)}
-                            </SelectContent>
-                        </Select>
-                        <Button onClick={generatePnLCSV} variant="outline" size="icon" disabled={pnlData.monthlyData.every(d => d.income === 0 && d.expenses === 0)}>
-                            <Download className="h-4 w-4" />
-                            <span className="sr-only">Export P&L</span>
-                        </Button>
-                    </div>
-                </div>
+              <CardTitle>{title}</CardTitle>
+              <CardDescription>
+                  Generate and export your financial data.
+              </CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="overflow-x-auto rounded-lg border">
-                 <table className="w-full text-sm">
-                    <thead className="bg-muted/50">
-                        <tr className="text-left">
-                            <th className="p-3 font-medium">Month</th>
-                            <th className="p-3 font-medium text-right">Income</th>
-                            <th className="p-3 font-medium text-right">Expenses</th>
-                            <th className="p-3 font-medium text-right">Net Profit</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {pnlData.monthlyData.map((data, index) => (
-                          <tr key={data.month} className="border-b last:border-none">
-                              <td className="p-3 font-medium">{data.month}</td>
-                              <td className="p-3 text-right text-green-600">{formatCurrency(data.income, settings.currency)}</td>
-                              <td className="p-3 text-right text-red-600">{formatCurrency(data.expenses, settings.currency)}</td>
-                              <td className={`p-3 text-right font-semibold ${data.netProfit >= 0 ? 'text-foreground' : 'text-destructive'}`}>
-                                {formatCurrency(data.netProfit, settings.currency)}
-                              </td>
-                          </tr>
-                        ))}
-                    </tbody>
-                    <tfoot className="bg-muted/50 font-bold">
-                        <tr>
-                            <td className="p-3">Annual Total</td>
-                            <td className="p-3 text-right text-green-600">{formatCurrency(pnlData.annualTotals.income, settings.currency)}</td>
-                            <td className="p-3 text-right text-red-600">{formatCurrency(pnlData.annualTotals.expenses, settings.currency)}</td>
-                            <td className={`p-3 text-right font-semibold ${pnlData.annualTotals.netProfit >= 0 ? 'text-foreground' : 'text-destructive'}`}>
-                                {formatCurrency(pnlData.annualTotals.netProfit, settings.currency)}
-                            </td>
-                        </tr>
-                    </tfoot>
-                 </table>
+              <p>You can export all your transaction data as a CSV file or print a professional summary of your records.</p>
+              <div className="mt-6 flex flex-col sm:flex-row gap-4">
+                  <Button onClick={generateFullReportCSV} disabled={transactions.length === 0}>
+                      <Download className="mr-2 h-4 w-4" />
+                      Export All as CSV
+                  </Button>
+                  <Button onClick={handlePrint} variant="outline">
+                    <Printer className="mr-2 h-4 w-4" />
+                    Print Financial Summary
+                  </Button>
               </div>
             </CardContent>
-        </Card>
-        
-        {/* Printable Report Layout */}
-        <div className="print-only">
-            {/* Page 1: Financial Summary */}
-            <div className="print-page">
-                <ReportHeader title="Financial Performance Summary" year={selectedYear} />
-                <div className="p-4 sm:p-8 space-y-8">
-                    {/* KPIs */}
-                    <div className="grid grid-cols-3 gap-2 sm:gap-6 text-center">
-                        <div className="bg-gray-100 p-2 sm:p-4 rounded-lg shadow">
-                            <h3 className="text-xs sm:text-sm font-medium text-gray-500">Total Revenue</h3>
-                            <p className="text-base sm:text-2xl font-bold text-green-600">{formatCurrency(aggregatedData.totalRevenue, settings.currency)}</p>
-                        </div>
-                        <div className="bg-gray-100 p-2 sm:p-4 rounded-lg shadow">
-                            <h3 className="text-xs sm:text-sm font-medium text-gray-500">Total Expenses</h3>
-                            <p className="text-base sm:text-2xl font-bold text-red-600">{formatCurrency(aggregatedData.totalExpenses, settings.currency)}</p>
-                        </div>
-                        <div className="bg-gray-100 p-2 sm:p-4 rounded-lg shadow">
-                            <h3 className="text-xs sm:text-sm font-medium text-gray-500">Net Profit</h3>
-                            <p className={`text-base sm:text-2xl font-bold ${aggregatedData.netProfit >= 0 ? 'text-blue-600' : 'text-red-600'}`}>
-                                {formatCurrency(aggregatedData.netProfit, settings.currency)}
-                            </p>
-                        </div>
-                    </div>
-                    
-                    {/* Charts */}
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-8" style={{height: '300px'}}>
-                        <div>
-                            <h3 className="text-base sm:text-lg font-semibold text-gray-700 mb-2 text-center">Income vs. Expenses</h3>
-                            <ResponsiveContainer width="100%" height="100%">
-                                <BarChart data={[{ name: 'Financials', revenue: aggregatedData.totalRevenue, expenses: aggregatedData.totalExpenses }]}>
-                                    <XAxis dataKey="name" stroke="#888" fontSize={10} />
-                                    <YAxis stroke="#888" fontSize={10} tickFormatter={(v) => `${settings.currency}${v.toLocaleString('en-US')}`} />
-                                    <Tooltip formatter={(v: number) => formatCurrency(v, settings.currency)} />
-                                    <Legend wrapperStyle={{fontSize: "10px"}}/>
-                                    <Bar dataKey="revenue" fill="#22c55e" name="Revenue" />
-                                    <Bar dataKey="expenses" fill="#ef4444" name="Expenses" />
-                                </BarChart>
-                            </ResponsiveContainer>
-                        </div>
-                        <div>
-                            <h3 className="text-base sm:text-lg font-semibold text-gray-700 mb-2 text-center">Expense Breakdown</h3>
-                            <ResponsiveContainer width="100%" height="100%">
-                                <PieChart>
-                                    <Pie data={aggregatedData.expensesByCategory} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={60} label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}>
-                                        {aggregatedData.expensesByCategory.map((entry, index) => (
-                                            <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                                        ))}
-                                    </Pie>
-                                    <Tooltip formatter={(v: number) => formatCurrency(v, settings.currency)} />
-                                    <Legend wrapperStyle={{fontSize: "10px", bottom: -5}}/>
-                                </PieChart>
-                            </ResponsiveContainer>
-                        </div>
-                    </div>
-                </div>
-                 <footer className="page-footer">
-                    <p>&copy; {new Date().getFullYear()} {settings.farmName}. All rights reserved.</p>
-                    <p>Agri Finance - Financial Management Simplified</p>
-                </footer>
-            </div>
+          </Card>
 
-            {/* Page 2: P&L Statement */}
-            <div className="print-page">
-                <ReportHeader title={`Profit & Loss Statement`} year={selectedYear} />
-                <div className="p-4 sm:p-8">
-                    <div className="overflow-x-auto rounded-lg border border-gray-200">
-                        <table className="w-full text-sm">
-                            <thead className="bg-gray-50">
-                                <tr className="text-left">
-                                    <th className="p-3 font-medium text-gray-600">Month</th>
-                                    <th className="p-3 font-medium text-gray-600 text-right">Income</th>
-                                    <th className="p-3 font-medium text-gray-600 text-right">Expenses</th>
-                                    <th className="p-3 font-medium text-gray-600 text-right">Net Profit</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {pnlData.monthlyData.map((data, index) => (
-                                <tr key={data.month} className={index % 2 === 0 ? 'bg-white' : 'bg-gray-50'}>
-                                    <td className="p-3 text-gray-800 font-medium">{data.month}</td>
-                                    <td className="p-3 text-right text-green-600">{formatCurrency(data.income, settings.currency)}</td>
-                                    <td className="p-3 text-right text-red-600">{formatCurrency(data.expenses, settings.currency)}</td>
-                                    <td className={`p-3 text-right font-semibold ${data.netProfit >= 0 ? 'text-gray-800' : 'text-red-700'}`}>
-                                        {formatCurrency(data.netProfit, settings.currency)}
-                                    </td>
-                                </tr>
-                                ))}
-                            </tbody>
-                            <tfoot className="bg-gray-100 font-bold">
-                                <tr>
-                                    <td className="p-3 text-gray-800">Annual Total</td>
-                                    <td className="p-3 text-right text-green-700">{formatCurrency(pnlData.annualTotals.income, settings.currency)}</td>
-                                    <td className="p-3 text-right text-red-700">{formatCurrency(pnlData.annualTotals.expenses, settings.currency)}</td>
-                                    <td className={`p-3 text-right font-semibold ${pnlData.annualTotals.netProfit >= 0 ? 'text-gray-900' : 'text-red-800'}`}>
-                                        {formatCurrency(pnlData.annualTotals.netProfit, settings.currency)}
-                                    </td>
-                                </tr>
-                            </tfoot>
-                        </table>
-                    </div>
+          <Card className="no-print w-full">
+              <CardHeader>
+                  <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                      <div>
+                          <CardTitle>Profit & Loss Statement</CardTitle>
+                          <CardDescription>
+                              Yearly financial performance by month for {selectedYear}.
+                          </CardDescription>
+                      </div>
+                      <div className="flex items-center gap-2 self-start sm:self-center w-full sm:w-auto">
+                          <Select value={String(selectedYear)} onValueChange={(v) => setSelectedYear(Number(v))}>
+                              <SelectTrigger className="w-full sm:w-[180px]">
+                                  <SelectValue placeholder="Select Year" />
+                              </SelectTrigger>
+                              <SelectContent>
+                                  {years.map(y => <SelectItem key={y} value={String(y)}>{y}</SelectItem>)}
+                              </SelectContent>
+                          </Select>
+                          <Button onClick={generatePnLCSV} variant="outline" size="icon" disabled={pnlData.monthlyData.every(d => d.income === 0 && d.expenses === 0)}>
+                              <Download className="h-4 w-4" />
+                              <span className="sr-only">Export P&L</span>
+                          </Button>
+                      </div>
+                  </div>
+              </CardHeader>
+              <CardContent>
+                <div className="overflow-x-auto rounded-lg border">
+                  <table className="w-full text-sm">
+                      <thead className="bg-muted/50">
+                          <tr className="text-left">
+                              <th className="p-3 font-medium">Month</th>
+                              <th className="p-3 font-medium text-right">Income</th>
+                              <th className="p-3 font-medium text-right">Expenses</th>
+                              <th className="p-3 font-medium text-right">Net Profit</th>
+                          </tr>
+                      </thead>
+                      <tbody>
+                          {pnlData.monthlyData.map((data, index) => (
+                            <tr key={data.month} className="border-b last:border-none">
+                                <td className="p-3 font-medium">{data.month}</td>
+                                <td className="p-3 text-right text-green-600">{formatCurrency(data.income, settings.currency)}</td>
+                                <td className="p-3 text-right text-red-600">{formatCurrency(data.expenses, settings.currency)}</td>
+                                <td className={`p-3 text-right font-semibold ${data.netProfit >= 0 ? 'text-foreground' : 'text-destructive'}`}>
+                                  {formatCurrency(data.netProfit, settings.currency)}
+                                </td>
+                            </tr>
+                          ))}
+                      </tbody>
+                      <tfoot className="bg-muted/50 font-bold">
+                          <tr>
+                              <td className="p-3">Annual Total</td>
+                              <td className="p-3 text-right text-green-600">{formatCurrency(pnlData.annualTotals.income, settings.currency)}</td>
+                              <td className="p-3 text-right text-red-600">{formatCurrency(pnlData.annualTotals.expenses, settings.currency)}</td>
+                              <td className={`p-3 text-right font-semibold ${pnlData.annualTotals.netProfit >= 0 ? 'text-foreground' : 'text-destructive'}`}>
+                                  {formatCurrency(pnlData.annualTotals.netProfit, settings.currency)}
+                              </td>
+                          </tr>
+                      </tfoot>
+                  </table>
                 </div>
-                 <footer className="page-footer">
-                    <p>&copy; {new Date().getFullYear()} {settings.farmName}. All rights reserved.</p>
-                    <p>Agri Finance - Financial Management Simplified</p>
-                </footer>
-            </div>
+              </CardContent>
+          </Card>
         </div>
-    </div>
+      </main>
+        
+      {/* Printable Report Layout */}
+      <div className="print-only">
+          {/* Page 1: Financial Summary */}
+          <div className="print-page">
+              <ReportHeader title="Financial Performance Summary" year={selectedYear} />
+              <div className="p-4 sm:p-8 space-y-8">
+                  {/* KPIs */}
+                  <div className="grid grid-cols-3 gap-2 sm:gap-6 text-center">
+                      <div className="bg-gray-100 p-2 sm:p-4 rounded-lg shadow">
+                          <h3 className="text-xs sm:text-sm font-medium text-gray-500">Total Revenue</h3>
+                          <p className="text-base sm:text-2xl font-bold text-green-600">{formatCurrency(aggregatedData.totalRevenue, settings.currency)}</p>
+                      </div>
+                      <div className="bg-gray-100 p-2 sm:p-4 rounded-lg shadow">
+                          <h3 className="text-xs sm:text-sm font-medium text-gray-500">Total Expenses</h3>
+                          <p className="text-base sm:text-2xl font-bold text-red-600">{formatCurrency(aggregatedData.totalExpenses, settings.currency)}</p>
+                      </div>
+                      <div className="bg-gray-100 p-2 sm:p-4 rounded-lg shadow">
+                          <h3 className="text-xs sm:text-sm font-medium text-gray-500">Net Profit</h3>
+                          <p className={`text-base sm:text-2xl font-bold ${aggregatedData.netProfit >= 0 ? 'text-blue-600' : 'text-red-600'}`}>
+                              {formatCurrency(aggregatedData.netProfit, settings.currency)}
+                          </p>
+                      </div>
+                  </div>
+                  
+                  {/* Charts */}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-8" style={{height: '300px'}}>
+                      <div>
+                          <h3 className="text-base sm:text-lg font-semibold text-gray-700 mb-2 text-center">Income vs. Expenses</h3>
+                          <ResponsiveContainer width="100%" height="100%">
+                              <BarChart data={[{ name: 'Financials', revenue: aggregatedData.totalRevenue, expenses: aggregatedData.totalExpenses }]}>
+                                  <XAxis dataKey="name" stroke="#888" fontSize={10} />
+                                  <YAxis stroke="#888" fontSize={10} tickFormatter={(v) => `${settings.currency}${v.toLocaleString('en-US')}`} />
+                                  <Tooltip formatter={(v: number) => formatCurrency(v, settings.currency)} />
+                                  <Legend wrapperStyle={{fontSize: "10px"}}/>
+                                  <Bar dataKey="revenue" fill="#22c55e" name="Revenue" />
+                                  <Bar dataKey="expenses" fill="#ef4444" name="Expenses" />
+                              </BarChart>
+                          </ResponsiveContainer>
+                      </div>
+                      <div>
+                          <h3 className="text-base sm:text-lg font-semibold text-gray-700 mb-2 text-center">Expense Breakdown</h3>
+                          <ResponsiveContainer width="100%" height="100%">
+                              <PieChart>
+                                  <Pie data={aggregatedData.expensesByCategory} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={60} label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}>
+                                      {aggregatedData.expensesByCategory.map((entry, index) => (
+                                          <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                                      ))}
+                                  </Pie>
+                                  <Tooltip formatter={(v: number) => formatCurrency(v, settings.currency)} />
+                                  <Legend wrapperStyle={{fontSize: "10px", bottom: -5}}/>
+                              </PieChart>
+                          </ResponsiveContainer>
+                      </div>
+                  </div>
+              </div>
+                <footer className="page-footer">
+                  <p>&copy; {new Date().getFullYear()} {settings.farmName}. All rights reserved.</p>
+                  <p>Agri Finance - Financial Management Simplified</p>
+              </footer>
+          </div>
+
+          {/* Page 2: P&L Statement */}
+          <div className="print-page">
+              <ReportHeader title={`Profit & Loss Statement`} year={selectedYear} />
+              <div className="p-4 sm:p-8">
+                  <div className="overflow-x-auto rounded-lg border border-gray-200">
+                      <table className="w-full text-sm">
+                          <thead className="bg-gray-50">
+                              <tr className="text-left">
+                                  <th className="p-3 font-medium text-gray-600">Month</th>
+                                  <th className="p-3 font-medium text-gray-600 text-right">Income</th>
+                                  <th className="p-3 font-medium text-gray-600 text-right">Expenses</th>
+                                  <th className="p-3 font-medium text-gray-600 text-right">Net Profit</th>
+                              </tr>
+                          </thead>
+                          <tbody>
+                              {pnlData.monthlyData.map((data, index) => (
+                              <tr key={data.month} className={index % 2 === 0 ? 'bg-white' : 'bg-gray-50'}>
+                                  <td className="p-3 text-gray-800 font-medium">{data.month}</td>
+                                  <td className="p-3 text-right text-green-600">{formatCurrency(data.income, settings.currency)}</td>
+                                  <td className="p-3 text-right text-red-600">{formatCurrency(data.expenses, settings.currency)}</td>
+                                  <td className={`p-3 text-right font-semibold ${data.netProfit >= 0 ? 'text-gray-800' : 'text-red-700'}`}>
+                                      {formatCurrency(data.netProfit, settings.currency)}
+                                  </td>
+                              </tr>
+                              ))}
+                          </tbody>
+                          <tfoot className="bg-gray-100 font-bold">
+                              <tr>
+                                  <td className="p-3 text-gray-800">Annual Total</td>
+                                  <td className="p-3 text-right text-green-700">{formatCurrency(pnlData.annualTotals.income, settings.currency)}</td>
+                                  <td className="p-3 text-right text-red-700">{formatCurrency(pnlData.annualTotals.expenses, settings.currency)}</td>
+                                  <td className={`p-3 text-right font-semibold ${pnlData.annualTotals.netProfit >= 0 ? 'text-gray-900' : 'text-red-800'}`}>
+                                      {formatCurrency(pnlData.annualTotals.netProfit, settings.currency)}
+                                  </td>
+                              </tr>
+                          </tfoot>
+                      </table>
+                  </div>
+              </div>
+                <footer className="page-footer">
+                  <p>&copy; {new Date().getFullYear()} {settings.farmName}. All rights reserved.</p>
+                  <p>Agri Finance - Financial Management Simplified</p>
+              </footer>
+          </div>
+      </div>
+    </>
   );
 }
