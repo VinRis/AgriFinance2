@@ -4,7 +4,7 @@ import { Card, CardHeader, CardTitle, CardContent, CardDescription } from '@/com
 import { LivestockType } from '@/lib/types';
 import { useAppContext } from '@/contexts/app-context';
 import { Button } from '@/components/ui/button';
-import { Download, Printer, TrendingUp, TrendingDown } from 'lucide-react';
+import { Download, Printer } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useMemo, useState } from 'react';
 import { Bar, BarChart, ResponsiveContainer, XAxis, YAxis, Tooltip, Legend, Pie, PieChart, Cell } from 'recharts';
@@ -172,7 +172,36 @@ export default function ReportsPage() {
   const handlePrint = () => {
     window.print();
   };
+  
+  const generateReportSummary = (data: AggregatedData, currency: string, year: number): string => {
+    if (data.totalTransactions === 0) {
+      return `For the year ${year}, there is no financial data to analyze for this enterprise.`;
+    }
 
+    const { totalRevenue, totalExpenses, netProfit } = data;
+    let summary = `In ${year}, the enterprise generated a total revenue of ${formatCurrency(totalRevenue, currency)} and incurred total expenses of ${formatCurrency(totalExpenses, currency)}. `;
+    
+    if (netProfit > 0) {
+      summary += `This resulted in a healthy net profit of ${formatCurrency(netProfit, currency)}, indicating a profitable year.`;
+    } else if (netProfit < 0) {
+      summary += `This resulted in a net loss of ${formatCurrency(Math.abs(netProfit), currency)}. This suggests that expenses exceeded income, and a review of cost-saving measures may be beneficial.`;
+    } else {
+      summary += "The enterprise broke even, with revenues exactly matching expenses.";
+    }
+
+    const highestExpense = data.expensesByCategory.length > 0 
+      ? data.expensesByCategory.reduce((max, cat) => cat.value > max.value ? cat : max)
+      : null;
+      
+    if (highestExpense) {
+      summary += ` The largest expense category was "${highestExpense.name}", accounting for ${formatCurrency(highestExpense.value, currency)} of the total costs.`;
+    }
+
+    return summary;
+  };
+
+
+  const reportSummary = generateReportSummary(aggregatedData, settings.currency, selectedYear);
   const COLORS = ['hsl(var(--chart-1))', 'hsl(var(--chart-2))', 'hsl(var(--chart-3))', 'hsl(var(--chart-4))', 'hsl(var(--chart-5))'];
 
   const ReportHeader = ({ title, year }: { title: string, year: number }) => (
@@ -254,7 +283,7 @@ export default function ReportsPage() {
                     </div>
                 </div>
                 <p className="text-xs text-muted-foreground mt-4 text-center">
-                    The full monthly breakdown can be downloaded as a CSV file.
+                    A full monthly P&L breakdown can be downloaded as a CSV file.
                 </p>
               </CardContent>
           </Card>
@@ -264,44 +293,49 @@ export default function ReportsPage() {
       <div className="print-only">
           <div className="print-page">
               <ReportHeader title="Financial Performance Summary" year={selectedYear} />
-              <div className="p-4 sm:p-8 space-y-8 flex-grow">
+              <div className="p-4 sm:p-8 space-y-6 flex-grow">
                   
-                  <div className="grid grid-cols-3 gap-2 sm:gap-6 text-center">
-                      <div className="bg-gray-100 p-2 sm:p-4 rounded-lg shadow">
-                          <h3 className="text-xs sm:text-sm font-medium text-gray-500">Total Revenue</h3>
-                          <p className="text-base sm:text-2xl font-bold text-green-600">{formatCurrency(aggregatedData.totalRevenue, settings.currency)}</p>
+                  <div className="grid grid-cols-3 gap-4 text-center">
+                      <div className="bg-gray-100 p-4 rounded-lg shadow">
+                          <h3 className="text-sm font-medium text-gray-500">Total Revenue</h3>
+                          <p className="text-2xl font-bold text-green-600">{formatCurrency(aggregatedData.totalRevenue, settings.currency)}</p>
                       </div>
-                      <div className="bg-gray-100 p-2 sm:p-4 rounded-lg shadow">
-                          <h3 className="text-xs sm:text-sm font-medium text-gray-500">Total Expenses</h3>
-                          <p className="text-base sm:text-2xl font-bold text-red-600">{formatCurrency(aggregatedData.totalExpenses, settings.currency)}</p>
+                      <div className="bg-gray-100 p-4 rounded-lg shadow">
+                          <h3 className="text-sm font-medium text-gray-500">Total Expenses</h3>
+                          <p className="text-2xl font-bold text-red-600">{formatCurrency(aggregatedData.totalExpenses, settings.currency)}</p>
                       </div>
-                      <div className="bg-gray-100 p-2 sm:p-4 rounded-lg shadow">
-                          <h3 className="text-xs sm:text-sm font-medium text-gray-500">Net Profit</h3>
-                          <p className={`text-base sm:text-2xl font-bold ${aggregatedData.netProfit >= 0 ? 'text-blue-600' : 'text-red-600'}`}>
+                      <div className="bg-gray-100 p-4 rounded-lg shadow">
+                          <h3 className="text-sm font-medium text-gray-500">Net Profit</h3>
+                          <p className={`text-2xl font-bold ${aggregatedData.netProfit >= 0 ? 'text-blue-600' : 'text-red-600'}`}>
                               {formatCurrency(aggregatedData.netProfit, settings.currency)}
                           </p>
                       </div>
                   </div>
                   
+                   <div className="bg-gray-50 p-4 rounded-lg border border-gray-200">
+                      <h3 className="text-lg font-semibold text-gray-700 mb-2 text-center">Executive Summary</h3>
+                      <p className="text-sm text-gray-600 text-justify">{reportSummary}</p>
+                   </div>
+                  
                   {aggregatedData.totalTransactions > 0 ? (
-                    <div className="grid grid-cols-2 gap-8 pt-8" style={{minHeight: '350px'}}>
-                        <div>
-                            <h3 className="text-base sm:text-lg font-semibold text-gray-700 mb-4 text-center">Income vs. Expenses</h3>
+                    <div className="grid grid-cols-2 gap-8 pt-6" style={{minHeight: '350px'}}>
+                        <div className="flex flex-col items-center">
+                            <h3 className="text-lg font-semibold text-gray-700 mb-4 text-center">Income vs. Expenses</h3>
                             <BarChart 
                                 width={400} height={250} 
                                 data={[{ name: 'Financials', revenue: aggregatedData.totalRevenue, expenses: aggregatedData.totalExpenses }]}
                                 isAnimationActive={false}
                             >
-                                <XAxis dataKey="name" stroke="#888" fontSize={10} />
-                                <YAxis stroke="#888" fontSize={10} tickFormatter={(v) => `${settings.currency}${v.toLocaleString('en-US')}`} />
+                                <XAxis dataKey="name" stroke="#888" fontSize={12} />
+                                <YAxis stroke="#888" fontSize={10} tickFormatter={(v) => `${settings.currency}${v.toLocaleString()}`} />
                                 <Tooltip formatter={(v: number) => formatCurrency(v, settings.currency)} />
-                                <Legend wrapperStyle={{fontSize: "10px"}}/>
+                                <Legend wrapperStyle={{fontSize: "12px"}}/>
                                 <Bar dataKey="revenue" fill="#22c55e" name="Revenue" />
                                 <Bar dataKey="expenses" fill="#ef4444" name="Expenses" />
                             </BarChart>
                         </div>
-                        <div>
-                            <h3 className="text-base sm:text-lg font-semibold text-gray-700 mb-4 text-center">Expense Breakdown</h3>
+                        <div className="flex flex-col items-center">
+                            <h3 className="text-lg font-semibold text-gray-700 mb-4 text-center">Expense Breakdown</h3>
                              <PieChart width={400} height={250}>
                                 <Pie 
                                     data={aggregatedData.expensesByCategory} 
@@ -313,12 +347,12 @@ export default function ReportsPage() {
                                     ))}
                                 </Pie>
                                 <Tooltip formatter={(v: number) => formatCurrency(v, settings.currency)} />
-                                <Legend wrapperStyle={{fontSize: "10px", bottom: -5}} iconSize={10}/>
+                                <Legend wrapperStyle={{fontSize: "12px", bottom: -5}} iconSize={10}/>
                             </PieChart>
                         </div>
                     </div>
                   ) : (
-                    <div className="flex items-center justify-center h-full text-gray-500">
+                    <div className="flex items-center justify-center h-full text-gray-500 py-20">
                       No financial data available for the selected year.
                     </div>
                   )}
@@ -332,3 +366,5 @@ export default function ReportsPage() {
     </>
   );
 }
+
+    
