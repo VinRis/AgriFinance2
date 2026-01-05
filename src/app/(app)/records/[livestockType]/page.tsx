@@ -1,9 +1,9 @@
 'use client';
 import { useState, useMemo } from 'react';
 import { notFound, usePathname } from 'next/navigation';
-import { Card, CardHeader, CardTitle, CardContent, CardDescription, CardFooter } from '@/components/ui/card';
+import { Card, CardHeader, CardTitle, CardContent, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Trash2, Edit, Filter, Download, Calendar as CalendarIcon } from 'lucide-react';
+import { Trash2, Edit, Download, X } from 'lucide-react';
 import { LivestockType, AgriTransaction } from '@/lib/types';
 import { useAppContext } from '@/contexts/app-context';
 import { RecordForm } from './record-form';
@@ -11,11 +11,9 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { useToast } from '@/hooks/use-toast';
 import { Badge } from '@/components/ui/badge';
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { Calendar } from '@/components/ui/calendar';
-import { DateRange } from 'react-day-picker';
-import { format, startOfDay, endOfDay } from 'date-fns';
-import { cn } from '@/lib/utils';
+import { startOfDay, endOfDay, isValid, parseISO } from 'date-fns';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 
 export default function RecordsPage() {
   const pathname = usePathname();
@@ -26,7 +24,9 @@ export default function RecordsPage() {
   const { toast } = useToast();
   const [isFormOpen, setFormOpen] = useState(false);
   const [selectedTransaction, setSelectedTransaction] = useState<AgriTransaction | null>(null);
-  const [date, setDate] = useState<DateRange | undefined>();
+
+  const [startDate, setStartDate] = useState<string>('');
+  const [endDate, setEndDate] = useState<string>('');
 
   if (livestockType !== 'dairy' && livestockType !== 'poultry') {
     notFound();
@@ -37,17 +37,31 @@ export default function RecordsPage() {
 
   const filteredTransactions = useMemo(() => {
     const sorted = allTransactions.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
-    if (date?.from) {
-      const from = startOfDay(date.from);
-      // If no 'to' date is selected, filter for the single day.
-      const to = date.to ? endOfDay(date.to) : endOfDay(date.from);
-      return sorted.filter(t => {
-        const transactionDate = new Date(t.date);
-        return transactionDate >= from && transactionDate <= to;
-      });
+    
+    let fromDate: Date | null = null;
+    let toDate: Date | null = null;
+
+    if (startDate) {
+        const parsedFrom = parseISO(startDate);
+        if (isValid(parsedFrom)) fromDate = startOfDay(parsedFrom);
     }
+    if (endDate) {
+        const parsedTo = parseISO(endDate);
+        if (isValid(parsedTo)) toDate = endOfDay(parsedTo);
+    }
+    
+    if (fromDate || toDate) {
+        return sorted.filter(t => {
+            const transactionDate = new Date(t.date);
+            if (fromDate && !toDate) return transactionDate >= fromDate;
+            if (!fromDate && toDate) return transactionDate <= toDate;
+            if(fromDate && toDate) return transactionDate >= fromDate && transactionDate <= toDate;
+            return false;
+        });
+    }
+
     return sorted;
-  }, [allTransactions, date]);
+  }, [allTransactions, startDate, endDate]);
 
 
   const handleEdit = (transaction: AgriTransaction) => {
@@ -94,6 +108,11 @@ export default function RecordsPage() {
     link.click();
     document.body.removeChild(link);
   };
+  
+  const clearFilter = () => {
+      setStartDate('');
+      setEndDate('');
+  }
 
   const Actions = ({transaction}: {transaction: AgriTransaction}) => (
     <>
@@ -130,54 +149,36 @@ export default function RecordsPage() {
   return (
     <div className="grid auto-rows-max items-start gap-4 md:gap-8 lg:col-span-3">
         <Card>
-          <CardHeader className="flex-col items-start gap-4 md:flex-row md:items-center md:justify-between">
+          <CardHeader className="flex-col items-start gap-4">
             <div>
               <CardTitle>{title}</CardTitle>
               <CardDescription>
                   Manage and filter your financial transactions here.
               </CardDescription>
             </div>
-            <div className="flex items-center gap-2">
-                <Popover>
-                    <PopoverTrigger asChild>
-                    <Button
-                        id="date"
-                        variant={"outline"}
-                        className={cn(
-                            "w-[240px] justify-start text-left font-normal",
-                            !date && "text-muted-foreground"
-                        )}
-                        >
-                        <CalendarIcon className="mr-2 h-4 w-4" />
-                        {date?.from ? (
-                            date.to ? (
-                            <>
-                                {format(date.from, "LLL dd, y")} -{" "}
-                                {format(date.to, "LLL dd, y")}
-                            </>
-                            ) : (
-                            format(date.from, "LLL dd, y")
-                            )
-                        ) : (
-                            <span>Pick a date range</span>
-                        )}
+            <div className="w-full flex flex-col sm:flex-row items-center gap-4">
+               <div className="w-full flex flex-col sm:flex-row items-center gap-2">
+                 <div className="grid w-full gap-1.5">
+                    <Label htmlFor="start-date">Start Date</Label>
+                    <Input id="start-date" type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)} />
+                 </div>
+                 <div className="grid w-full gap-1.5">
+                    <Label htmlFor="end-date">End Date</Label>
+                    <Input id="end-date" type="date" value={endDate} onChange={(e) => setEndDate(e.target.value)} />
+                 </div>
+               </div>
+                <div className="flex self-end gap-2">
+                    {(startDate || endDate) && (
+                        <Button onClick={clearFilter} variant="ghost" size="icon">
+                            <X className="h-4 w-4" />
+                            <span className="sr-only">Clear Filter</span>
                         </Button>
-                    </PopoverTrigger>
-                    <PopoverContent className="w-auto p-0" align="end">
-                        <Calendar
-                        initialFocus
-                        mode="range"
-                        defaultMonth={date?.from}
-                        selected={date}
-                        onSelect={setDate}
-                        numberOfMonths={2}
-                        />
-                    </PopoverContent>
-                </Popover>
-                 <Button onClick={generateCSV} disabled={filteredTransactions.length === 0} variant="outline" size="icon">
-                    <Download className="h-4 w-4" />
-                    <span className="sr-only">Export Filtered</span>
-                </Button>
+                    )}
+                    <Button onClick={generateCSV} disabled={filteredTransactions.length === 0} variant="outline" size="icon">
+                        <Download className="h-4 w-4" />
+                        <span className="sr-only">Export Filtered</span>
+                    </Button>
+                </div>
             </div>
           </CardHeader>
           <CardContent>
