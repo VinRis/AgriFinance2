@@ -5,8 +5,9 @@ import { useAppContext } from '@/contexts/app-context';
 import { LivestockType, AgriTransaction } from '@/lib/types';
 import { DollarSign, TrendingUp, TrendingDown, BookOpen, Lightbulb } from 'lucide-react';
 import { Bar, BarChart, ResponsiveContainer, XAxis, YAxis, Tooltip, CartesianGrid, Pie, PieChart, Cell, Legend } from 'recharts';
-import { useMemo, useState, useEffect } from 'react';
+import { useMemo, useState } from 'react';
 import { Skeleton } from '@/components/ui/skeleton';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 interface AggregatedData {
   totalRevenue: number;
@@ -65,7 +66,7 @@ function aggregateData(transactions: AgriTransaction[]): AggregatedData {
 
 function generateFinancialSummary(data: AggregatedData, currency: string): string {
   if (data.totalTransactions === 0) {
-    return 'There is no transaction data to analyze.';
+    return 'There is no transaction data to analyze for the selected period.';
   }
 
   const { totalRevenue, totalExpenses, netProfit, pieChartData } = data;
@@ -85,6 +86,16 @@ function generateFinancialSummary(data: AggregatedData, currency: string): strin
   return summary;
 }
 
+const currentYear = new Date().getFullYear();
+const years = Array.from({ length: 10 }, (_, i) => currentYear - i);
+const months = [
+  { value: 0, label: 'January' }, { value: 1, label: 'February' },
+  { value: 2, label: 'March' }, { value: 3, label: 'April' },
+  { value: 4, label: 'May' }, { value: 5, label: 'June' },
+  { value: 6, label: 'July' }, { value: 7, label: 'August' },
+  { value: 8, label: 'September' }, { value: 9, label: 'October' },
+  { value: 10, label: 'November' }, { value: 11, label: 'December' },
+];
 
 export default function DashboardPage() {
   const pathname = usePathname();
@@ -92,13 +103,39 @@ export default function DashboardPage() {
   const livestockType = segments[segments.length - 1] as LivestockType;
   
   const { getTransactions, settings, isHydrated } = useAppContext();
+  
+  const [filterType, setFilterType] = useState('all');
+  const [selectedYear, setSelectedYear] = useState(currentYear);
+  const [selectedMonth, setSelectedMonth] = useState(new Date().getMonth());
 
   if (livestockType !== 'dairy' && livestockType !== 'poultry') {
     notFound();
   }
+  
+  const allTransactions = getTransactions(livestockType);
 
-  const transactions = getTransactions(livestockType);
-  const aggregatedData = aggregateData(transactions);
+  const filteredTransactions = useMemo(() => {
+    if (!isHydrated) return [];
+    if (filterType === 'all') return allTransactions;
+
+    const now = new Date();
+    return allTransactions.filter(t => {
+      const transactionDate = new Date(t.date);
+      if (filterType === 'ytd') {
+        return transactionDate.getFullYear() === now.getFullYear();
+      }
+      if (filterType === 'year') {
+        return transactionDate.getFullYear() === selectedYear;
+      }
+      if (filterType === 'month') {
+        return transactionDate.getFullYear() === selectedYear && transactionDate.getMonth() === selectedMonth;
+      }
+      return true;
+    });
+  }, [allTransactions, filterType, selectedYear, selectedMonth, isHydrated]);
+
+
+  const aggregatedData = aggregateData(filteredTransactions);
   const { totalRevenue, totalExpenses, netProfit, totalTransactions, barChartData, pieChartData } = aggregatedData;
   const financialSummary = generateFinancialSummary(aggregatedData, settings.currency);
   
@@ -135,6 +172,55 @@ export default function DashboardPage() {
 
   return (
     <div className="grid auto-rows-max items-start gap-4 md:gap-8 lg:col-span-3">
+        <Card>
+            <CardHeader>
+                <CardTitle>Filters</CardTitle>
+            </CardHeader>
+            <CardContent className="flex flex-col sm:flex-row gap-4">
+                <Select value={filterType} onValueChange={setFilterType}>
+                    <SelectTrigger className="w-full sm:w-[180px]">
+                        <SelectValue placeholder="Select Filter" />
+                    </SelectTrigger>
+                    <SelectContent>
+                        <SelectItem value="all">All Time</SelectItem>
+                        <SelectItem value="ytd">Year to Date</SelectItem>
+                        <SelectItem value="year">By Year</SelectItem>
+                        <SelectItem value="month">By Month</SelectItem>
+                    </SelectContent>
+                </Select>
+                {filterType === 'year' && (
+                    <Select value={String(selectedYear)} onValueChange={(v) => setSelectedYear(Number(v))}>
+                         <SelectTrigger className="w-full sm:w-[180px]">
+                            <SelectValue placeholder="Select Year" />
+                        </SelectTrigger>
+                        <SelectContent>
+                            {years.map(y => <SelectItem key={y} value={String(y)}>{y}</SelectItem>)}
+                        </SelectContent>
+                    </Select>
+                )}
+                 {filterType === 'month' && (
+                    <>
+                         <Select value={String(selectedYear)} onValueChange={(v) => setSelectedYear(Number(v))}>
+                            <SelectTrigger className="w-full sm:w-[180px]">
+                                <SelectValue placeholder="Select Year" />
+                            </SelectTrigger>
+                            <SelectContent>
+                                {years.map(y => <SelectItem key={y} value={String(y)}>{y}</SelectItem>)}
+                            </SelectContent>
+                        </Select>
+                        <Select value={String(selectedMonth)} onValueChange={(v) => setSelectedMonth(Number(v))}>
+                            <SelectTrigger className="w-full sm:w-[180px]">
+                                <SelectValue placeholder="Select Month" />
+                            </SelectTrigger>
+                            <SelectContent>
+                                {months.map(m => <SelectItem key={m.value} value={String(m.value)}>{m.label}</SelectItem>)}
+                            </SelectContent>
+                        </Select>
+                    </>
+                )}
+            </CardContent>
+        </Card>
+
        <div className="grid grid-cols-2 gap-4 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-4">
             <KPICard
                 title="Total Revenue"
@@ -166,10 +252,10 @@ export default function DashboardPage() {
           <Card className="lg:col-span-4">
               <CardHeader>
                   <CardTitle>Financial Overview</CardTitle>
-                  <CardDescription>A summary of income and expenses from the last 30 days.</CardDescription>
+                  <CardDescription>A summary of income and expenses. Bar chart shows last 30 days of selected period.</CardDescription>
               </CardHeader>
               <CardContent>
-                  {isHydrated ? (
+                  {isHydrated && filteredTransactions.length > 0 ? (
                   <ResponsiveContainer width="100%" height={300}>
                       <BarChart data={barChartData}>
                           <CartesianGrid strokeDasharray="3 3" vertical={false} />
@@ -192,13 +278,17 @@ export default function DashboardPage() {
                           <Bar dataKey="expenses" fill="hsl(var(--destructive))" radius={[4, 4, 0, 0]} name="Expenses" />
                       </BarChart>
                   </ResponsiveContainer>
+                  ) : isHydrated ? (
+                    <div className="flex items-center justify-center h-[300px] text-muted-foreground">
+                      No data for this period.
+                    </div>
                   ) : <Skeleton className="w-full h-[300px]" />}
               </CardContent>
           </Card>
           <Card className="lg:col-span-3">
             <CardHeader>
               <CardTitle>Expense Breakdown</CardTitle>
-              <CardDescription>A breakdown of expenses by category.</CardDescription>
+              <CardDescription>A breakdown of expenses by category for the selected period.</CardDescription>
             </CardHeader>
             <CardContent>
               {isHydrated && pieChartData.length > 0 ? (
@@ -252,7 +342,7 @@ export default function DashboardPage() {
             <Lightbulb className="h-6 w-6 text-primary" />
             <div>
               <CardTitle>Financial Snapshot</CardTitle>
-              <CardDescription>A summary of your recent financial activity.</CardDescription>
+              <CardDescription>A summary of your financial activity for the selected period.</CardDescription>
             </div>
           </CardHeader>
           <CardContent>
