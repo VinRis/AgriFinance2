@@ -1,9 +1,9 @@
 'use client';
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { notFound, usePathname } from 'next/navigation';
 import { Card, CardHeader, CardTitle, CardContent, CardDescription, CardFooter } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Trash2, Edit } from 'lucide-react';
+import { Trash2, Edit, Filter, Download, Calendar as CalendarIcon } from 'lucide-react';
 import { LivestockType, AgriTransaction } from '@/lib/types';
 import { useAppContext } from '@/contexts/app-context';
 import { RecordForm } from './record-form';
@@ -11,6 +11,11 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { useToast } from '@/hooks/use-toast';
 import { Badge } from '@/components/ui/badge';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Calendar } from '@/components/ui/calendar';
+import { DateRange } from 'react-day-picker';
+import { format, startOfDay, endOfDay } from 'date-fns';
+import { cn } from '@/lib/utils';
 
 export default function RecordsPage() {
   const pathname = usePathname();
@@ -21,13 +26,29 @@ export default function RecordsPage() {
   const { toast } = useToast();
   const [isFormOpen, setFormOpen] = useState(false);
   const [selectedTransaction, setSelectedTransaction] = useState<AgriTransaction | null>(null);
+  const [date, setDate] = useState<DateRange | undefined>();
 
   if (livestockType !== 'dairy' && livestockType !== 'poultry') {
     notFound();
   }
 
   const title = livestockType === 'dairy' ? 'Dairy Transactions' : 'Poultry Transactions';
-  const transactions = getTransactions(livestockType).sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+  const allTransactions = getTransactions(livestockType);
+
+  const filteredTransactions = useMemo(() => {
+    const sorted = allTransactions.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+    if (date?.from) {
+      const from = startOfDay(date.from);
+      // If no 'to' date is selected, filter for the single day.
+      const to = date.to ? endOfDay(date.to) : endOfDay(date.from);
+      return sorted.filter(t => {
+        const transactionDate = new Date(t.date);
+        return transactionDate >= from && transactionDate <= to;
+      });
+    }
+    return sorted;
+  }, [allTransactions, date]);
+
 
   const handleEdit = (transaction: AgriTransaction) => {
     setSelectedTransaction(transaction);
@@ -43,6 +64,36 @@ export default function RecordsPage() {
     setFormOpen(false);
     setSelectedTransaction(null);
   }
+
+  const generateCSV = () => {
+    if (filteredTransactions.length === 0) {
+        toast({
+            variant: "destructive",
+            title: "No Data to Export",
+            description: "There are no transactions in the selected date range.",
+        });
+        return;
+    }
+    const headers = Object.keys(filteredTransactions[0] || {}).join(',');
+    const csv = [
+      headers,
+      ...filteredTransactions.map(row =>
+        Object.values(row).map(value => JSON.stringify(value, (_, val) => val ?? '')).join(',')
+      )
+    ].join('\n');
+    
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    if (link.href) {
+      URL.revokeObjectURL(link.href);
+    }
+    const url = URL.createObjectURL(blob);
+    link.href = url;
+    link.setAttribute('download', `${livestockType}-records-${new Date().toISOString().split('T')[0]}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
 
   const Actions = ({transaction}: {transaction: AgriTransaction}) => (
     <>
@@ -79,21 +130,63 @@ export default function RecordsPage() {
   return (
     <div className="grid auto-rows-max items-start gap-4 md:gap-8 lg:col-span-3">
         <Card>
-          <CardHeader>
+          <CardHeader className="flex-col items-start gap-4 md:flex-row md:items-center md:justify-between">
             <div>
               <CardTitle>{title}</CardTitle>
               <CardDescription>
-                  Manage your financial transactions here.
+                  Manage and filter your financial transactions here.
               </CardDescription>
+            </div>
+            <div className="flex items-center gap-2">
+                <Popover>
+                    <PopoverTrigger asChild>
+                    <Button
+                        id="date"
+                        variant={"outline"}
+                        className={cn(
+                            "w-[240px] justify-start text-left font-normal",
+                            !date && "text-muted-foreground"
+                        )}
+                        >
+                        <CalendarIcon className="mr-2 h-4 w-4" />
+                        {date?.from ? (
+                            date.to ? (
+                            <>
+                                {format(date.from, "LLL dd, y")} -{" "}
+                                {format(date.to, "LLL dd, y")}
+                            </>
+                            ) : (
+                            format(date.from, "LLL dd, y")
+                            )
+                        ) : (
+                            <span>Pick a date range</span>
+                        )}
+                        </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0" align="end">
+                        <Calendar
+                        initialFocus
+                        mode="range"
+                        defaultMonth={date?.from}
+                        selected={date}
+                        onSelect={setDate}
+                        numberOfMonths={2}
+                        />
+                    </PopoverContent>
+                </Popover>
+                 <Button onClick={generateCSV} disabled={filteredTransactions.length === 0} variant="outline" size="icon">
+                    <Download className="h-4 w-4" />
+                    <span className="sr-only">Export Filtered</span>
+                </Button>
             </div>
           </CardHeader>
           <CardContent>
-            {transactions.length > 0 ? (
+            {filteredTransactions.length > 0 ? (
                 <>
                   {/* Mobile View */}
                   <div className="md:hidden">
                     <div className="space-y-4">
-                      {transactions.map(t => (
+                      {filteredTransactions.map(t => (
                         <Card key={t.id} className="w-full">
                            <CardContent className="p-4 flex items-center justify-between">
                             <div className="flex-1">
@@ -128,7 +221,7 @@ export default function RecordsPage() {
                             </TableRow>
                         </TableHeader>
                         <TableBody>
-                            {transactions.map(t => (
+                            {filteredTransactions.map(t => (
                                 <TableRow key={t.id}>
                                     <TableCell>{new Date(t.date).toLocaleDateString()}</TableCell>
                                     <TableCell className="font-medium">{t.description}</TableCell>
@@ -148,7 +241,7 @@ export default function RecordsPage() {
                 </>
             ) : (
                 <div className="text-center py-12">
-                    <p className="text-muted-foreground">No transactions found.</p>
+                    <p className="text-muted-foreground">No transactions found for the selected period.</p>
                 </div>
             )}
           </CardContent>

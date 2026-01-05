@@ -5,6 +5,7 @@ import { LivestockType } from '@/lib/types';
 import { useAppContext } from '@/contexts/app-context';
 import { Button } from '@/components/ui/button';
 import { Download } from 'lucide-react';
+import { useToast } from '@/hooks/use-toast';
 
 export default function ReportsPage() {
   const pathname = usePathname();
@@ -12,6 +13,7 @@ export default function ReportsPage() {
   const livestockType = segments[segments.length - 1] as LivestockType;
 
   const { getTransactions, settings } = useAppContext();
+  const { toast } = useToast();
 
   if (livestockType !== 'dairy' && livestockType !== 'poultry') {
     notFound();
@@ -21,7 +23,14 @@ export default function ReportsPage() {
   const transactions = getTransactions(livestockType);
 
   const generateCSV = () => {
-    if (transactions.length === 0) return;
+    if (transactions.length === 0) {
+      toast({
+        variant: 'destructive',
+        title: 'No Data to Export',
+        description: 'There are no transactions to export.'
+      });
+      return;
+    };
     const headers = Object.keys(transactions[0] || {}).join(',');
     const csv = [
       headers,
@@ -37,7 +46,7 @@ export default function ReportsPage() {
     }
     const url = URL.createObjectURL(blob);
     link.href = url;
-    link.setAttribute('download', `${livestockType}-report.csv`);
+    link.setAttribute('download', `${livestockType}-full-report.csv`);
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
@@ -57,11 +66,11 @@ export default function ReportsPage() {
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <p>You can export your data as a CSV file or print a summary of your records.</p>
+            <p>You can export all your data as a CSV file or print a summary of your records.</p>
             <div className="mt-6 flex gap-4">
                  <Button onClick={generateCSV} disabled={transactions.length === 0}>
                     <Download className="mr-2" />
-                    Export as CSV
+                    Export All as CSV
                 </Button>
                 <Button onClick={handlePrint} variant="outline">Print Summary</Button>
             </div>
