@@ -19,20 +19,6 @@ interface AggregatedData {
   expensesByCategory: { name: string; value: number }[];
 }
 
-interface PnLData {
-  monthlyData: {
-    month: string;
-    income: number;
-    expenses: number;
-    netProfit: number;
-  }[];
-  annualTotals: {
-    income: number;
-    expenses: number;
-    netProfit: number;
-  };
-}
-
 function formatCurrency(amount: number, currency: string) {
     return `${currency}${amount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 }
@@ -90,7 +76,7 @@ export default function ReportsPage() {
     return data;
   }, [transactions, selectedYear]);
   
-  const pnlData: PnLData = useMemo(() => {
+  const pnlData = useMemo(() => {
     const yearlyTransactions = transactions.filter(t => new Date(t.date).getFullYear() === selectedYear);
     const monthlyData = months.map((month, index) => {
         const monthTransactions = yearlyTransactions.filter(t => new Date(t.date).getMonth() === index);
@@ -367,4 +353,3 @@ export default function ReportsPage() {
   );
 }
 
-    
