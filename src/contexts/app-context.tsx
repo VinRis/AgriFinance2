@@ -66,22 +66,21 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
   const [state, dispatch] = useReducer(appReducer, defaultState);
 
   useEffect(() => {
+    // Component has mounted, so we're on the client
     setIsHydrated(true);
-  }, []);
+
+    // Sync state from local storage once on initial load
+    const transactions = storedState.transactions || [];
+    const settings = { ...defaultSettings, ...(storedState.settings || {}) };
+    dispatch({ type: 'SET_STATE', payload: { transactions, settings } });
+  }, []); // Empty dependency array ensures this runs only once on mount
 
   useEffect(() => {
-    if (isHydrated) {
-      const transactions = storedState.transactions || [];
-      const settings = { ...defaultSettings, ...(storedState.settings || {}) };
-      dispatch({ type: 'SET_STATE', payload: { transactions, settings } });
-    }
-  }, [isHydrated, storedState]);
-
-  useEffect(() => {
+    // Persist state to local storage whenever it changes, but only after initial hydration
     if (isHydrated) {
       setStoredState(state);
     }
-  }, [state, setStoredState, isHydrated]);
+  }, [state, isHydrated, setStoredState]);
 
   const getTransactions = (type: LivestockType) => {
     if (!isHydrated) return [];
