@@ -190,6 +190,9 @@ export default function LivestockSelectionPage() {
           </CardContent>
         </Card>
       </div>
+      <div className="mt-12 text-center text-sm text-muted-foreground">
+        Made with 🩷 by KPF
+      </div>
     </main>
   );
 }

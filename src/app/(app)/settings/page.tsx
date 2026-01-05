@@ -149,6 +149,9 @@ export default function SettingsPage() {
                 </div>
             </CardContent>
         </Card>
+        <div className="text-center text-sm text-muted-foreground">
+          Made with 🩷 by KPF
+        </div>
     </div>
   );
 }
