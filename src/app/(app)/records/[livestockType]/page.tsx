@@ -13,18 +13,17 @@ import { useToast } from '@/hooks/use-toast';
 import { Badge } from '@/components/ui/badge';
 
 export default function RecordsPage({ params }: { params: { livestockType: string } }) {
-  const { livestockType } = params;
   const { getTransactions, dispatch, settings } = useAppContext();
   const { toast } = useToast();
   const [isFormOpen, setFormOpen] = useState(false);
   const [selectedTransaction, setSelectedTransaction] = useState<AgriTransaction | null>(null);
 
-  if (livestockType !== 'dairy' && livestockType !== 'poultry') {
+  if (params.livestockType !== 'dairy' && params.livestockType !== 'poultry') {
     notFound();
   }
 
-  const title = livestockType === 'dairy' ? 'Dairy Transactions' : 'Poultry Transactions';
-  const transactions = getTransactions(livestockType as LivestockType).sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+  const title = params.livestockType === 'dairy' ? 'Dairy Transactions' : 'Poultry Transactions';
+  const transactions = getTransactions(params.livestockType as LivestockType).sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
 
   const handleEdit = (transaction: AgriTransaction) => {
     setSelectedTransaction(transaction);
@@ -115,7 +114,7 @@ export default function RecordsPage({ params }: { params: { livestockType: strin
           </CardContent>
         </Card>
         <RecordForm 
-            livestockType={livestockType as LivestockType}
+            livestockType={params.livestockType as LivestockType}
             isOpen={isFormOpen}
             onClose={closeForm}
             transaction={selectedTransaction}

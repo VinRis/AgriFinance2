@@ -57,14 +57,13 @@ function aggregateData(transactions: AgriTransaction[]): AggregatedData {
 
 
 export default function DashboardPage({ params }: { params: { livestockType: string } }) {
-  const { livestockType } = params;
   const { getTransactions, settings } = useAppContext();
 
-  if (livestockType !== 'dairy' && livestockType !== 'poultry') {
+  if (params.livestockType !== 'dairy' && params.livestockType !== 'poultry') {
     notFound();
   }
 
-  const transactions = getTransactions(livestockType as LivestockType);
+  const transactions = getTransactions(params.livestockType as LivestockType);
   const { totalRevenue, totalExpenses, netProfit, totalTransactions, chartData } = aggregateData(transactions);
   
   const KPICard = ({ title, value, icon: Icon, description }: { title: string; value: string; icon: React.ElementType, description: string }) => (
