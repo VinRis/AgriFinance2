@@ -78,7 +78,7 @@ export function NavLinks() {
               href={item.href}
               key={item.label}
               className={cn(
-                'flex flex-col items-center justify-center gap-1 rounded-lg p-2 text-muted-foreground transition-colors hover:text-foreground',
+                'flex flex-col items-center justify-center gap-1 rounded-lg p-2 text-muted-foreground transition-colors hover:text-foreground w-full',
                  isNavItemActive(item.href) ? 'text-primary' : '',
                  (item.label === 'Dashboard' || item.label === 'Records' || item.label === 'Reports') &&
                  pathname.includes('tasks') ? 'hidden sm:flex' : 'flex'

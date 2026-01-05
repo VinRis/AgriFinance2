@@ -116,6 +116,23 @@ export default function TasksPage() {
       </div>
     </div>
   );
+  
+  const DayContent = (dayProps: { date: Date }) => {
+    const { date } = dayProps;
+    const hasTask = allTasks.some(task => {
+        const taskDate = new Date(task.date);
+        return taskDate.getFullYear() === date.getFullYear() &&
+               taskDate.getMonth() === date.getMonth() &&
+               taskDate.getDate() === date.getDate();
+    });
+    return (
+        <div className="relative h-full w-full flex items-center justify-center">
+            <span>{date.getDate()}</span>
+            {hasTask && <div className="absolute bottom-1 h-1.5 w-1.5 rounded-full bg-primary"></div>}
+        </div>
+    );
+  };
+
 
   return (
     <div className="grid auto-rows-max items-start gap-4 md:gap-8 lg:col-span-3">
@@ -145,20 +162,7 @@ export default function TasksPage() {
                         day_disabled: "text-muted-foreground opacity-50",
                     }}
                     components={{
-                        DayContent: ({ date }) => {
-                            const hasTask = allTasks.some(task => {
-                                const taskDate = new Date(task.date);
-                                return taskDate.getFullYear() === date.getFullYear() &&
-                                       taskDate.getMonth() === date.getMonth() &&
-                                       taskDate.getDate() === date.getDate();
-                            });
-                            return (
-                                <div className="relative h-full w-full flex items-center justify-center">
-                                    <span>{date.getDate()}</span>
-                                    {hasTask && <div className="absolute bottom-1 h-1.5 w-1.5 rounded-full bg-primary"></div>}
-                                </div>
-                            );
-                        }
+                        DayContent: DayContent
                     }}
                 />
             </CardContent>
