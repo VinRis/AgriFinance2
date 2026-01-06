@@ -4,6 +4,7 @@ import {ThemeProvider} from '@/components/theme-provider';
 import {Toaster} from '@/components/ui/toaster';
 import {AppProvider} from '@/contexts/app-context';
 import { PWALifecycle } from '@/components/pwa-lifecycle';
+import { InstallPWA } from '@/components/install-pwa';
 
 export const metadata: Metadata = {
   title: 'Agri Finance',
@@ -30,6 +31,7 @@ export default function RootLayout({
         <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
           <AppProvider>
             <PWALifecycle />
+            <InstallPWA />
             {children}
             <Toaster />
           </AppProvider>

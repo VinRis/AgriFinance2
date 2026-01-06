@@ -1,27 +1,23 @@
 {
-  "name": "Agri Finance",
-  "short_name": "AgriFinance",
-  "description": "Financial management for your livestock enterprise.",
-  "start_url": "/",
-  "display": "standalone",
-  "background_color": "#ffffff",
-  "theme_color": "#2962FF",
-  "icons": [
-    {
-      "src": "/images/icon.svg",
-      "sizes": "any",
-      "type": "image/svg+xml"
-    },
-    {
-      "src": "/images/icon-maskable.svg",
-      "sizes": "any",
-      "type": "image/svg+xml",
-      "purpose": "maskable"
-    },
-    {
-      "src": "/images/icon-512x512.png",
-      "sizes": "512x512",
-      "type": "image/png"
-    }
-  ]
+    "name": "AgriFinance Pro",
+    "short_name": "AgriFinance",
+    "description": "Financial management for your livestock enterprise.",
+    "start_url": "/",
+    "display": "standalone",
+    "background_color": "#F5F5DC",
+    "theme_color": "#3F704F",
+    "icons": [
+        {
+            "src": "/images/icon-maskable.svg",
+            "sizes": "any",
+            "type": "image/svg+xml",
+            "purpose": "maskable"
+        },
+        {
+            "src": "/images/icon.svg",
+            "sizes": "any",
+            "type": "image/svg+xml",
+            "purpose": "any"
+        }
+    ]
 }
