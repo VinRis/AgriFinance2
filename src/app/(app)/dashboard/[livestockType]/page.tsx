@@ -424,7 +424,8 @@ export default function DashboardPage() {
                               backgroundColor: 'hsl(var(--background))',
                               borderColor: 'hsl(var(--border))',
                               borderRadius: 'var(--radius)',
-                              boxShadow: '0 4px 12px hsl(var(--foreground) / 0.1)'
+                              boxShadow: '0 4px 12px hsl(var(--foreground) / 0.1)',
+                              color: 'hsl(var(--foreground))'
                             }}
                             formatter={(value: number) => formatCurrency(value, settings.currency)}
                           />
@@ -478,7 +479,8 @@ export default function DashboardPage() {
                           backgroundColor: 'hsl(var(--background))',
                           borderColor: 'hsl(var(--border))',
                           borderRadius: 'var(--radius)',
-                          boxShadow: '0 4px 12px hsl(var(--foreground) / 0.1)'
+                          boxShadow: '0 4px 12px hsl(var(--foreground) / 0.1)',
+                          color: 'hsl(var(--foreground))'
                         }}
                         formatter={(value: number) => formatCurrency(value, settings.currency)}
                     />
