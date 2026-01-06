@@ -3,8 +3,9 @@ import React, { createContext, useContext, useReducer, ReactNode, useEffect, use
 import { AgriTransaction, AppSettings, FarmTask, LivestockType } from '@/lib/types';
 import { useLocalStorage } from '@/hooks/use-local-storage';
 import { useUser } from '@/firebase';
-import { collection, doc, onSnapshot, writeBatch, getDocs, query } from 'firebase/firestore';
+import { collection, doc, onSnapshot, writeBatch, getDocs, query, setDoc } from 'firebase/firestore';
 import { useFirestore, useMemoFirebase } from '@/firebase/provider';
+import { useToast } from '@/hooks/use-toast';
 
 type State = {
   transactions: AgriTransaction[];
@@ -89,6 +90,7 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
   const [isHydrated, setIsHydrated] = useState(false);
   const { user, isUserLoading } = useUser();
   const firestore = useFirestore();
+  const { toast } = useToast();
   
   const [state, dispatch] = useReducer(appReducer, defaultState);
 
@@ -114,6 +116,8 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
     const mergeData = async () => {
         if (user && firestore && userDocRef && transactionsColRef && tasksColRef && storedState.transactions.length > 0) {
             console.log("Merging local data to Firestore...");
+            toast({ title: "Syncing...", description: "Merging local data with the cloud." });
+
             const firestoreTransactionSnap = await getDocs(query(transactionsColRef));
             const firestoreTransactions = firestoreTransactionSnap.docs.map(d => d.data() as AgriTransaction);
             const firestoreTaskSnap = await getDocs(query(tasksColRef));
@@ -121,8 +125,10 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
 
             const batch = writeBatch(firestore);
 
-            // Merge settings
-            batch.set(userDocRef, storedState.settings, { merge: true });
+            // Merge settings, giving precedence to local settings if they are not default
+            if (JSON.stringify(storedState.settings) !== JSON.stringify(defaultSettings)) {
+              batch.set(userDocRef, storedState.settings, { merge: true });
+            }
 
             // Merge transactions
             storedState.transactions.forEach(localTx => {
@@ -140,54 +146,61 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
             });
 
             await batch.commit();
-            console.log("Local data merged.");
+            toast({ title: "Sync Complete", description: "Your local data has been saved to the cloud." });
             // Clear local storage after successful merge
             setStoredState(defaultState);
         }
     };
-    mergeData();
-  }, [user, firestore, userDocRef, transactionsColRef, tasksColRef, storedState, setStoredState]);
+    if (isCloudSyncing && !isUserLoading) {
+        mergeData();
+    }
+  }, [isCloudSyncing, isUserLoading, firestore, userDocRef, transactionsColRef, tasksColRef, storedState, setStoredState, user, toast]);
 
-  // Subscribe to Firestore data
+  // Subscribe to Firestore data when logged in
   useEffect(() => {
-    if (!userDocRef || !transactionsColRef || !tasksColRef) return;
-    
-    setIsHydrated(false);
+    if (isCloudSyncing && userDocRef && transactionsColRef && tasksColRef) {
+        setIsHydrated(false);
 
-    const unsubSettings = onSnapshot(userDocRef, (doc) => {
-      if (doc.exists()) {
-        dispatch({ type: 'UPDATE_SETTINGS', payload: doc.data() as AppSettings });
-      }
-       setIsHydrated(true);
-    });
-    
-    const unsubTransactions = onSnapshot(transactionsColRef, (snapshot) => {
-      const transactions = snapshot.docs.map(doc => doc.data() as AgriTransaction);
-      dispatch({ type: 'SET_STATE', payload: { transactions } });
-       setIsHydrated(true);
-    });
+        const unsubSettings = onSnapshot(userDocRef, (doc) => {
+          if (doc.exists()) {
+            dispatch({ type: 'UPDATE_SETTINGS', payload: doc.data() as AppSettings });
+          } else {
+            // First time user, set default settings in firestore
+            if(firestore) {
+              setDoc(userDocRef, defaultSettings);
+            }
+          }
+        });
+        
+        const unsubTransactions = onSnapshot(transactionsColRef, (snapshot) => {
+          const transactions = snapshot.docs.map(doc => doc.data() as AgriTransaction);
+          dispatch({ type: 'SET_STATE', payload: { transactions } });
+        });
 
-    const unsubTasks = onSnapshot(tasksColRef, (snapshot) => {
-      const tasks = snapshot.docs.map(doc => doc.data() as FarmTask);
-      dispatch({ type: 'SET_STATE', payload: { tasks } });
-       setIsHydrated(true);
-    });
-    
-    return () => {
-      unsubSettings();
-      unsubTransactions();
-      unsubTasks();
-    };
+        const unsubTasks = onSnapshot(tasksColRef, (snapshot) => {
+          const tasks = snapshot.docs.map(doc => doc.data() as FarmTask);
+          dispatch({ type: 'SET_STATE', payload: { tasks } });
+        });
 
-  }, [userDocRef, transactionsColRef, tasksColRef]);
+        // After all subscriptions are set up and potentially fired once
+        const timer = setTimeout(() => setIsHydrated(true), 500); // Small delay to allow data to populate
+
+        return () => {
+          unsubSettings();
+          unsubTransactions();
+          unsubTasks();
+          clearTimeout(timer);
+        };
+    }
+  }, [isCloudSyncing, userDocRef, transactionsColRef, tasksColRef, firestore]);
 
   // Load from local storage if not logged in
   useEffect(() => {
-    if (!isUserLoading && !user) {
+    if (!isUserLoading && !isCloudSyncing) {
       dispatch({ type: 'SET_STATE', payload: storedState });
       setIsHydrated(true);
     }
-  }, [isUserLoading, user, storedState]);
+  }, [isUserLoading, isCloudSyncing, storedState]);
 
   // Persist state to local storage if not logged in
   useEffect(() => {
@@ -197,50 +210,54 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
   }, [state, isHydrated, isCloudSyncing, setStoredState]);
   
    const wrappedDispatch = useCallback<React.Dispatch<Action>>((action) => {
-    const { payload } = action;
-
     if (isCloudSyncing && userDocRef && firestore) {
+      const { type, payload } = action;
       const batch = writeBatch(firestore);
-      switch (action.type) {
-        case 'ADD_TRANSACTION':
-        case 'UPDATE_TRANSACTION':
-            batch.set(doc(userDocRef, 'transactions', (payload as AgriTransaction).id), payload);
-            break;
-        case 'DELETE_TRANSACTION':
-            batch.delete(doc(userDocRef, 'transactions', payload as string));
-            break;
-        case 'ADD_TASK':
-        case 'UPDATE_TASK':
-            batch.set(doc(userDocRef, 'tasks', (payload as FarmTask).id), payload);
-            break;
-        case 'DELETE_TASK':
-            batch.delete(doc(userDocRef, 'tasks', payload as string));
-            break;
-        case 'UPDATE_SETTINGS':
-            batch.set(userDocRef, payload, { merge: true });
-            break;
-        default:
-            // For SET_STATE, we assume it's coming from Firestore or local storage, so we just update local state
-             dispatch(action);
-             return;
+      try {
+        switch (type) {
+            case 'ADD_TRANSACTION':
+            case 'UPDATE_TRANSACTION':
+                batch.set(doc(transactionsColRef!, (payload as AgriTransaction).id), payload);
+                break;
+            case 'DELETE_TRANSACTION':
+                batch.delete(doc(transactionsColRef!, payload as string));
+                break;
+            case 'ADD_TASK':
+            case 'UPDATE_TASK':
+                batch.set(doc(tasksColRef!, (payload as FarmTask).id), payload);
+                break;
+            case 'DELETE_TASK':
+                batch.delete(doc(tasksColRef!, payload as string));
+                break;
+            case 'UPDATE_SETTINGS':
+                batch.set(userDocRef, payload, { merge: true });
+                break;
+            default:
+                // For SET_STATE, we assume it's coming from Firestore or local storage, so we just update local state
+                dispatch(action);
+                return;
+        }
+        batch.commit()
+            .catch(e => {
+              console.error("Firestore update failed:", e);
+              toast({ variant: 'destructive', title: "Sync Error", description: "Could not save changes to the cloud." });
+            });
+      } catch (e) {
+        console.error("Error preparing Firestore batch:", e);
       }
-       batch.commit()
-        .then(() => dispatch(action))
-        .catch(e => console.error("Firestore update failed:", e));
-    } else {
-        dispatch(action);
     }
-
-  }, [isCloudSyncing, userDocRef, firestore]);
+    // Always update the local state immediately for a responsive UI
+    dispatch(action);
+  }, [isCloudSyncing, userDocRef, firestore, transactionsColRef, tasksColRef, toast]);
   
 
   const getTransactions = (type: LivestockType) => {
-    if (!isHydrated && !isCloudSyncing) return [];
+    if (!isHydrated) return [];
     return state.transactions.filter(transaction => transaction.livestockType === type);
   };
   
   const getTasks = (type?: LivestockType | 'general') => {
-    if (!isHydrated && !isCloudSyncing) return [];
+    if (!isHydrated) return [];
     if (!type) return state.tasks;
     return state.tasks.filter(task => task.livestockType === type);
   };
@@ -250,7 +267,7 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
     dispatch: wrappedDispatch,
     getTransactions,
     getTasks,
-    isHydrated: isHydrated || isCloudSyncing,
+    isHydrated,
     isCloudSyncing
   }), [state, wrappedDispatch, getTransactions, getTasks, isHydrated, isCloudSyncing]);
 

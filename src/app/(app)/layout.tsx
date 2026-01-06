@@ -11,13 +11,12 @@ import { LivestockType } from '@/lib/types';
 import { useLocalStorage } from '@/hooks/use-local-storage';
 import { useExitPrompt } from '@/hooks/use-exit-prompt';
 import { cn } from '@/lib/utils';
-import { useUser } from '@/firebase';
+import { useAppContext } from '@/contexts/app-context';
 import { Loader } from 'lucide-react';
 
 export default function AppLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
-  const router = useRouter();
-  const { user, isUserLoading } = useUser();
+  const { isHydrated } = useAppContext();
 
   useExitPrompt(true);
   const [isFormOpen, setFormOpen] = useState(false);
@@ -27,13 +26,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
   const pathLivestockType = segments.includes('dairy') ? 'dairy' : segments.includes('poultry') ? 'poultry' : null;
   const livestockType = (pathLivestockType || lastSelectedType) as LivestockType;
 
-  useEffect(() => {
-    if (!isUserLoading && !user) {
-      router.push('/login');
-    }
-  }, [isUserLoading, user, router]);
-
-  if (isUserLoading) {
+  if (!isHydrated) {
     return (
       <div className="flex min-h-screen w-full flex-col items-center justify-center bg-muted/40">
         <Loader className="h-12 w-12 animate-spin text-primary" />
@@ -41,11 +34,6 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
       </div>
     );
   }
-  
-  if (!user) {
-    return null; // Don't render anything if user is not logged in, redirect will handle it.
-  }
-
 
   const handleFabClick = () => {
     setFormOpen(true);

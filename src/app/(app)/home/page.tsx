@@ -9,6 +9,8 @@ import { useToast } from '@/hooks/use-toast';
 import { Button } from '@/components/ui/button';
 import { AgriTransaction, AppSettings, FarmTask } from '@/lib/types';
 import React, { useRef, useState, useEffect } from 'react';
+import { useUser } from '@/firebase';
+import { useRouter } from 'next/navigation';
 
 type AppState = {
   transactions: AgriTransaction[];
@@ -34,6 +36,8 @@ export default function LivestockSelectionPage() {
   const poultryImage = PlaceHolderImages.find((img) => img.id === 'poultry-selection');
 
   const { transactions, settings, tasks, dispatch, isCloudSyncing } = useAppContext();
+  const { user } = useUser();
+  const router = useRouter();
   const { toast } = useToast();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [randomTip, setRandomTip] = useState('');
@@ -230,7 +234,11 @@ export default function LivestockSelectionPage() {
                         />
                     </div>
                     <p className="text-xs text-muted-foreground text-center mt-2">
-                        Your data is stored locally. Keep a weekly backup to prevent data loss.
+                        Your data is stored locally. Keep a weekly backup to prevent data loss. 
+                        <Button variant="link" size="sm" className="p-1 h-auto" onClick={() => router.push('/login')}>
+                          Sign in
+                        </Button>
+                        to enable cloud sync.
                     </p>
                 </div>
             )}
