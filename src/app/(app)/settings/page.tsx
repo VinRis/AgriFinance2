@@ -10,7 +10,7 @@ import { useAppContext } from '@/contexts/app-context';
 import { useToast } from '@/hooks/use-toast';
 import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { ThemeToggle } from '@/components/theme-toggle';
-import { LifeBuoy, MessageSquare, Phone } from 'lucide-react';
+import { LifeBuoy, MessageSquare, Phone, ShoppingCart } from 'lucide-react';
 
 const settingsSchema = z.object({
   farmName: z.string().min(1, 'Farm name is required'),
@@ -141,7 +141,7 @@ export default function SettingsPage() {
                     <div>
                         <CardTitle>Help & Support</CardTitle>
                         <CardDescription>
-                            Contact the developer for assistance.
+                            Contact us for assistance or visit our store.
                         </CardDescription>
                     </div>
                 </div>
@@ -150,6 +150,13 @@ export default function SettingsPage() {
                 <p className="text-sm text-foreground/90">
                     If you encounter any issues or have questions, please don't hesitate to reach out.
                 </p>
+                <div className="flex items-center gap-4 rounded-lg border p-4">
+                    <ShoppingCart className="h-5 w-5 text-muted-foreground" />
+                    <div>
+                        <h4 className="font-medium">KPF Store</h4>
+                        <a href="https://selar.com/m/kpf" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">Get access to useful tools</a>
+                    </div>
+                </div>
                 <div className="flex items-center gap-4 rounded-lg border p-4">
                     <Phone className="h-5 w-5 text-muted-foreground" />
                     <div>
