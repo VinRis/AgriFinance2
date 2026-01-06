@@ -11,9 +11,10 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetFooter, SheetClose }
 import { useAppContext } from '@/contexts/app-context';
 import { FarmTask, LivestockType } from '@/lib/types';
 import { useToast } from '@/hooks/use-toast';
-import { Bird, Milk, Wrench, Siren } from 'lucide-react';
+import { Bird, Milk, Wrench, Siren, Bell } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+import { Switch } from '@/components/ui/switch';
 
 type TaskFormProps = {
   isOpen: boolean;
@@ -29,6 +30,7 @@ const formSchema = z.object({
   livestockType: z.enum(['dairy', 'poultry', 'general'], { required_error: 'Please select a category.'}),
   description: z.string().optional(),
   priority: z.enum(['low', 'medium', 'high']).default('medium'),
+  reminder: z.boolean().default(false),
 });
 
 
@@ -53,17 +55,35 @@ export function TaskForm({ isOpen, onClose, task, selectedDate }: TaskFormProps)
     resolver: zodResolver(formSchema),
     defaultValues: task
       ? { ...task, date: new Date(task.date).toISOString().split('T')[0] }
-      : { livestockType: 'general', title: '', description: '', date: getDefaultDate(), time: getDefaultTime(), priority: 'medium' },
+      : { livestockType: 'general', title: '', description: '', date: getDefaultDate(), time: getDefaultTime(), priority: 'medium', reminder: false },
   });
 
   useEffect(() => {
     if (isOpen) {
        form.reset(task
         ? { ...task, date: new Date(task.date).toISOString().split('T')[0] }
-        : { livestockType: 'general', title: '', description: '', date: getDefaultDate(), time: getDefaultTime(), priority: 'medium' }
+        : { livestockType: 'general', title: '', description: '', date: getDefaultDate(), time: getDefaultTime(), priority: 'medium', reminder: false }
       );
     }
   }, [isOpen, task, selectedDate, form]);
+
+
+  const scheduleNotification = (taskData: z.infer<typeof formSchema>) => {
+    const taskDateTime = new Date(`${taskData.date}T${taskData.time}`).getTime();
+    const now = new Date().getTime();
+    const delay = taskDateTime - now;
+
+    if (delay > 0) {
+      setTimeout(() => {
+        // This will only work if the app is open
+        new Notification('Agri Finance Task Reminder', {
+          body: taskData.title,
+          icon: '/icons/icon-192x192.png'
+        });
+      }, delay);
+      toast({ title: 'Reminder Set', description: `You will be reminded for "${taskData.title}".` });
+    }
+  };
 
 
   const onSubmit: SubmitHandler<z.infer<typeof formSchema>> = (data) => {
@@ -82,6 +102,15 @@ export function TaskForm({ isOpen, onClose, task, selectedDate }: TaskFormProps)
       dispatch({ type: 'ADD_TASK', payload: taskData as FarmTask });
       toast({ title: 'Task Added', description: 'A new task has been scheduled.' });
     }
+
+    if (data.reminder) {
+        if ('Notification' in window && Notification.permission === 'granted') {
+            scheduleNotification(data);
+        } else {
+            toast({ variant: 'destructive', title: 'Notification permission denied', description: 'Please enable notifications in your browser settings to set reminders.'});
+        }
+    }
+
     onClose();
   };
   
@@ -202,6 +231,30 @@ export function TaskForm({ isOpen, onClose, task, selectedDate }: TaskFormProps)
                       </RadioGroup>
                     </FormControl>
                     <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="reminder"
+                render={({ field }) => (
+                  <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
+                    <div className="space-y-0.5">
+                      <FormLabel className="text-base flex items-center gap-2">
+                        <Bell className="h-4 w-4"/>
+                        Set Reminder
+                      </FormLabel>
+                      <p className="text-sm text-muted-foreground">
+                        Get a notification at the time of the task.
+                      </p>
+                    </div>
+                    <FormControl>
+                      <Switch
+                        checked={field.value}
+                        onCheckedChange={field.onChange}
+                      />
+                    </FormControl>
                   </FormItem>
                 )}
               />

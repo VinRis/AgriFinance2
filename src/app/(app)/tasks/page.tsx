@@ -2,7 +2,7 @@
 import { useState, useMemo, useEffect, useRef } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Trash2, Edit, Bird, Milk, Wrench, Siren } from 'lucide-react';
+import { Trash2, Edit, Bird, Milk, Wrench, Siren, Bell } from 'lucide-react';
 import { FarmTask, LivestockType } from '@/lib/types';
 import { useAppContext } from '@/contexts/app-context';
 import { TaskForm } from './task-form';
@@ -57,6 +57,18 @@ export default function TasksPage() {
     });
     return { morningTasks: morning, afternoonTasks: afternoon };
   }, [tasksForDate]);
+  
+  useEffect(() => {
+    if ('Notification' in window && Notification.permission === 'default') {
+        Notification.requestPermission().then(permission => {
+            if (permission === 'granted') {
+                toast({ title: 'Notifications Enabled', description: 'You can now set task reminders.' });
+            } else {
+                toast({ variant: 'destructive', title: 'Notifications Disabled', description: 'You will not be able to receive task reminders.' });
+            }
+        });
+    }
+  }, [toast]);
   
   useEffect(() => {
     // Scroll the selected date into view

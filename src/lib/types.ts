@@ -29,4 +29,5 @@ export interface FarmTask {
   description: string;
   status: TaskStatus;
   priority: 'low' | 'medium' | 'high';
+  reminder: boolean;
 }

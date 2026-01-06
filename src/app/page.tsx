@@ -33,7 +33,7 @@ export default function LivestockSelectionPage() {
   const dairyImage = PlaceHolderImages.find((img) => img.id === 'dairy-selection');
   const poultryImage = PlaceHolderImages.find((img) => img.id === 'poultry-selection');
 
-  const { transactions, settings, dispatch } = useAppContext();
+  const { transactions, settings, tasks, dispatch } = useAppContext();
   const { toast } = useToast();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [randomTip, setRandomTip] = useState('');
@@ -46,7 +46,7 @@ export default function LivestockSelectionPage() {
 
 
   const handleBackup = () => {
-    const appState = { transactions, settings };
+    const appState = { transactions, settings, tasks };
     const blob = new Blob([JSON.stringify(appState, null, 2)], { type: 'application/json' });
     const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
@@ -77,8 +77,7 @@ export default function LivestockSelectionPage() {
 
         const parsedData = JSON.parse(text);
 
-        // This is the migration logic.
-        // It ensures old backups work with new versions of the app.
+        // Migration logic for backwards compatibility
         const restoredState: Partial<AppState> = {
           transactions: parsedData.transactions || [],
           settings: parsedData.settings || {},

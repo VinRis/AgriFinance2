@@ -45,10 +45,16 @@ const defaultState: State = {
 function appReducer(state: State, action: Action): State {
   switch (action.type) {
     case 'SET_STATE':
+        const incomingTasks = action.payload.tasks || [];
+        const migratedTasks = incomingTasks.map(t => ({
+            ...t,
+            priority: t.priority || 'medium',
+            reminder: t.reminder || false,
+        }));
         return {
           settings: { ...defaultSettings, ...(action.payload.settings || {}) },
           transactions: action.payload.transactions || [],
-          tasks: action.payload.tasks || [],
+          tasks: migratedTasks,
         };
     case 'ADD_TRANSACTION':
       return { ...state, transactions: [...state.transactions, action.payload] };
@@ -86,10 +92,7 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
     setIsHydrated(true);
 
     // Sync state from local storage once on initial load
-    const transactions = storedState.transactions || [];
-    const settings = { ...defaultSettings, ...(storedState.settings || {}) };
-    const tasks = (storedState.tasks || []).map(t => ({...t, priority: t.priority || 'medium' })); // Migration for priority
-    dispatch({ type: 'SET_STATE', payload: { transactions, settings, tasks } });
+    dispatch({ type: 'SET_STATE', payload: storedState });
   }, []); // Empty dependency array ensures this runs only once on mount
 
   useEffect(() => {
