@@ -1,6 +1,6 @@
 'use client';
 import Link from 'next/link';
-import { usePathname, useRouter } from 'next/navigation';
+import { usePathname } from 'next/navigation';
 import { BookCopy, FileText, LayoutDashboard, Settings, Home, CalendarDays } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useLocalStorage } from '@/hooks/use-local-storage';
@@ -8,7 +8,6 @@ import { useEffect } from 'react';
 
 export function NavLinks() {
   const pathname = usePathname();
-  const router = useRouter();
   const segments = pathname.split('/');
   const [lastSelectedType, setLastSelectedType] = useLocalStorage<string>('last-livestock-type', 'dairy');
   
