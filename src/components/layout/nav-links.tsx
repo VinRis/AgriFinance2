@@ -65,7 +65,7 @@ export function NavLinks() {
     <>
       {/* Mobile Bottom Bar */}
       <div className="fixed bottom-0 left-0 right-0 z-10 border-t bg-background/95 backdrop-blur-sm p-2 no-print">
-        <div className="mx-auto grid max-w-2xl grid-cols-5 items-center justify-items-center gap-1">
+        <div className="mx-auto grid max-w-2xl grid-cols-6 items-center justify-items-center gap-1">
             <Link
                 href="/"
                 className='flex flex-col items-center justify-center text-muted-foreground w-full gap-1 p-2'
