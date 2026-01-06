@@ -3,14 +3,12 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { PlaceHolderImages } from '@/lib/placeholder-images';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { ArrowRight, Download, Upload, Lightbulb, Cloud } from 'lucide-react';
+import { ArrowRight, Download, Upload, Lightbulb } from 'lucide-react';
 import { useAppContext } from '@/contexts/app-context';
 import { useToast } from '@/hooks/use-toast';
 import { Button } from '@/components/ui/button';
 import { AgriTransaction, AppSettings, FarmTask } from '@/lib/types';
 import React, { useRef, useState, useEffect } from 'react';
-import { useUser } from '@/firebase';
-import { useRouter } from 'next/navigation';
 
 type AppState = {
   transactions: AgriTransaction[];
@@ -35,9 +33,7 @@ export default function LivestockSelectionPage() {
   const dairyImage = PlaceHolderImages.find((img) => img.id === 'dairy-selection');
   const poultryImage = PlaceHolderImages.find((img) => img.id === 'poultry-selection');
 
-  const { transactions, settings, tasks, dispatch, isCloudSyncing } = useAppContext();
-  const { user } = useUser();
-  const router = useRouter();
+  const { transactions, settings, tasks, dispatch } = useAppContext();
   const { toast } = useToast();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [randomTip, setRandomTip] = useState('');
@@ -47,7 +43,6 @@ export default function LivestockSelectionPage() {
     const randomIndex = Math.floor(Math.random() * farmTips.length);
     setRandomTip(farmTips[randomIndex]);
   }, []);
-
 
   const handleBackup = () => {
     const appState = { transactions, settings, tasks };
@@ -204,44 +199,28 @@ export default function LivestockSelectionPage() {
                   </div>
               </div>
             
-            {isCloudSyncing ? (
-              <div className="flex flex-col items-center justify-center gap-2 rounded-lg border p-4">
-                  <div className="flex items-center gap-2 text-green-600">
-                    <Cloud className="h-5 w-5"/>
-                    <p className="font-semibold">Cloud Sync Enabled</p>
-                  </div>
-                   <p className="text-xs text-muted-foreground text-center">
-                        Your data is securely backed up to the cloud.
-                    </p>
-              </div>
-            ) : (
-                <div className="flex flex-col items-center justify-center gap-4 rounded-lg border p-4">
-                    <div className="flex flex-col gap-4 sm:flex-row">
-                        <Button onClick={handleBackup}>
-                            <Download className="mr-2 h-4 w-4" />
-                            Backup Data
-                        </Button>
-                        <Button onClick={handleRestoreClick} variant="outline">
-                            <Upload className="mr-2 h-4 w-4" />
-                            Restore Data
-                        </Button>
-                        <input
-                            type="file"
-                            ref={fileInputRef}
-                            onChange={handleFileChange}
-                            accept="application/json"
-                            className="hidden"
-                        />
-                    </div>
-                    <p className="text-xs text-muted-foreground text-center mt-2">
-                        Your data is stored locally. Keep a weekly backup to prevent data loss. 
-                        <Button variant="link" size="sm" className="p-1 h-auto" onClick={() => router.push('/login')}>
-                          Sign in
-                        </Button>
-                        to enable cloud sync.
-                    </p>
+            <div className="flex flex-col items-center justify-center gap-4 rounded-lg border p-4">
+                <div className="flex flex-col gap-4 sm:flex-row">
+                    <Button onClick={handleBackup}>
+                        <Download className="mr-2 h-4 w-4" />
+                        Backup Data
+                    </Button>
+                    <Button onClick={handleRestoreClick} variant="outline">
+                        <Upload className="mr-2 h-4 w-4" />
+                        Restore Data
+                    </Button>
+                    <input
+                        type="file"
+                        ref={fileInputRef}
+                        onChange={handleFileChange}
+                        accept="application/json"
+                        className="hidden"
+                    />
                 </div>
-            )}
+                <p className="text-xs text-muted-foreground text-center mt-2">
+                    Your data is stored locally on your device. Keep a weekly backup to prevent data loss.
+                </p>
+            </div>
           </CardContent>
         </Card>
       </div>

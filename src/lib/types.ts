@@ -9,7 +9,6 @@ export interface AgriTransaction {
   category: string;
   amount: number;
   description: string;
-  // userId?: string;
 }
 
 export interface AppSettings {
@@ -17,7 +16,6 @@ export interface AppSettings {
   managerName: string;
   location: string;
   currency: string;
-  // userId?: string;
 }
 
 export type TaskStatus = 'pending' | 'completed';
@@ -32,5 +30,4 @@ export interface FarmTask {
   status: TaskStatus;
   priority: 'low' | 'medium' | 'high';
   reminder: boolean;
-  // userId?: string;
 }

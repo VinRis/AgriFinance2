@@ -25,6 +25,8 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
   
   const pathLivestockType = segments.includes('dairy') ? 'dairy' : segments.includes('poultry') ? 'poultry' : null;
   const livestockType = (pathLivestockType || lastSelectedType) as LivestockType;
+  
+  const showNav = !pathname.includes('/home');
 
   if (!isHydrated) {
     return (
@@ -41,7 +43,6 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
 
   const isFinancesPage = pathname.includes('/finances');
   const isTasksPage = pathname.includes('/tasks');
-  const showNav = pathname !== '/home';
 
   const renderForm = () => {
     if (isTasksPage) {
@@ -56,7 +57,6 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
   const fabClasses = cn(
     "fixed bottom-20 right-6 rounded-full shadow-lg z-20 no-print transition-all duration-300 h-16 w-16 bg-green-500 hover:bg-green-600"
   );
-
 
   return (
     <div className="flex min-h-screen w-full flex-col bg-muted/40">

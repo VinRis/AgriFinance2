@@ -58,7 +58,7 @@ const nextConfig: NextConfig = {
       },
     ],
   },
-  async redirects() {
+   async redirects() {
     return [
       {
         source: '/',

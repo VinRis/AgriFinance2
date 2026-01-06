@@ -10,10 +10,7 @@ import { useAppContext } from '@/contexts/app-context';
 import { useToast } from '@/hooks/use-toast';
 import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { ThemeToggle } from '@/components/theme-toggle';
-import { LifeBuoy, MessageSquare, Phone, ShoppingCart, LogOut, Loader } from 'lucide-react';
-import { useAuth } from '@/firebase';
-import { signOut } from 'firebase/auth';
-import { useRouter } from 'next/navigation';
+import { LifeBuoy, MessageSquare, Phone, ShoppingCart } from 'lucide-react';
 
 const settingsSchema = z.object({
   farmName: z.string().min(1, 'Farm name is required'),
@@ -43,8 +40,6 @@ const FacebookIcon = (props: React.SVGProps<SVGSVGElement>) => (
 
 export default function SettingsPage() {
   const { settings, dispatch } = useAppContext();
-  const auth = useAuth();
-  const router = useRouter();
   const { toast } = useToast();
 
   const form = useForm<SettingsFormValues>({
@@ -52,17 +47,6 @@ export default function SettingsPage() {
     defaultValues: settings,
   });
 
-  const handleSignOut = async () => {
-    try {
-      await signOut(auth);
-      toast({ title: 'Signed Out', description: 'You have been successfully signed out.' });
-      router.push('/login');
-    } catch (error) {
-      console.error("Error signing out:", error);
-      toast({ variant: 'destructive', title: 'Sign Out Failed', description: 'There was an error signing you out.'});
-    }
-  }
-  
   const onSubmit: SubmitHandler<SettingsFormValues> = (data) => {
     dispatch({ type: 'UPDATE_SETTINGS', payload: data });
     toast({
@@ -143,12 +127,8 @@ export default function SettingsPage() {
                   <ThemeToggle />
                 </div>
             </CardContent>
-            <CardFooter className="flex justify-between">
+            <CardFooter>
               <Button type="submit">Save Changes</Button>
-               <Button type="button" variant="outline" onClick={handleSignOut}>
-                <LogOut className="mr-2 h-4 w-4" />
-                Sign Out
-              </Button>
             </CardFooter>
           </Card>
         </form>

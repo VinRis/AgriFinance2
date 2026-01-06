@@ -5,7 +5,6 @@ import {Toaster} from '@/components/ui/toaster';
 import {AppProvider} from '@/contexts/app-context';
 import { PWALifecycle } from '@/components/pwa-lifecycle';
 import { InstallPWA } from '@/components/install-pwa';
-import { FirebaseClientProvider } from '@/firebase/client-provider';
 
 declare global {
   interface Window {
@@ -36,14 +35,12 @@ export default function RootLayout({
       </head>
       <body suppressHydrationWarning={true}>
         <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
-          <FirebaseClientProvider>
             <AppProvider>
               <PWALifecycle />
               <InstallPWA />
               {children}
               <Toaster />
             </AppProvider>
-          </FirebaseClientProvider>
         </ThemeProvider>
       </body>
     </html>

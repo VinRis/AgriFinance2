@@ -8,6 +8,9 @@ import { useEffect } from 'react';
 
 export function NavLinks() {
   const pathname = usePathname();
+
+  if (pathname === '/home') return null;
+
   const segments = pathname.split('/');
   const [lastSelectedType, setLastSelectedType] = useLocalStorage<string>('last-livestock-type', 'dairy');
   

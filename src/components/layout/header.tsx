@@ -16,6 +16,8 @@ export function Header() {
         livestockType = lastSelectedType;
     }
 
+    if(pathname.includes('/home')) return null;
+
     let title = '';
     if(pathname.includes('dashboard')) title = 'Dashboard';
     else if(pathname.includes('finances')) title = 'Finances';
