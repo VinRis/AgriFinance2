@@ -160,24 +160,24 @@ export default function FinancesPage() {
 
         <div className="grid grid-cols-2 gap-4">
             <Card>
-                <CardContent className="p-4 flex items-center gap-3">
+                <CardContent className="p-4 flex items-start gap-3">
                     <div className="p-2 bg-green-100 rounded-full dark:bg-green-900/50">
                         <ArrowDown className="h-4 w-4 text-green-600"/>
                     </div>
-                    <div>
+                    <div className="flex-1">
                         <p className="text-sm text-muted-foreground">Income</p>
-                        <p className="font-bold text-lg">+{formatCurrency(totalIncome, settings.currency)}</p>
+                        <p className="font-bold text-base sm:text-lg break-words">+{formatCurrency(totalIncome, settings.currency)}</p>
                     </div>
                 </CardContent>
             </Card>
              <Card>
-                <CardContent className="p-4 flex items-center gap-3">
+                <CardContent className="p-4 flex items-start gap-3">
                     <div className="p-2 bg-red-100 rounded-full dark:bg-red-900/50">
                         <ArrowUp className="h-4 w-4 text-red-600"/>
                     </div>
-                    <div>
+                    <div className="flex-1">
                         <p className="text-sm text-muted-foreground">Expense</p>
-                        <p className="font-bold text-lg">-{formatCurrency(totalExpenses, settings.currency)}</p>
+                        <p className="font-bold text-base sm:text-lg break-words">-{formatCurrency(totalExpenses, settings.currency)}</p>
                     </div>
                 </CardContent>
             </Card>
