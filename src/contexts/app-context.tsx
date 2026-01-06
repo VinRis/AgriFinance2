@@ -152,20 +152,25 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
   useEffect(() => {
     if (!userDocRef || !transactionsColRef || !tasksColRef) return;
     
+    setIsHydrated(false);
+
     const unsubSettings = onSnapshot(userDocRef, (doc) => {
       if (doc.exists()) {
         dispatch({ type: 'UPDATE_SETTINGS', payload: doc.data() as AppSettings });
       }
+       setIsHydrated(true);
     });
     
     const unsubTransactions = onSnapshot(transactionsColRef, (snapshot) => {
       const transactions = snapshot.docs.map(doc => doc.data() as AgriTransaction);
       dispatch({ type: 'SET_STATE', payload: { transactions } });
+       setIsHydrated(true);
     });
 
     const unsubTasks = onSnapshot(tasksColRef, (snapshot) => {
       const tasks = snapshot.docs.map(doc => doc.data() as FarmTask);
       dispatch({ type: 'SET_STATE', payload: { tasks } });
+       setIsHydrated(true);
     });
     
     return () => {
@@ -179,8 +184,8 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
   // Load from local storage if not logged in
   useEffect(() => {
     if (!isUserLoading && !user) {
-      setIsHydrated(true);
       dispatch({ type: 'SET_STATE', payload: storedState });
+      setIsHydrated(true);
     }
   }, [isUserLoading, user, storedState]);
 
@@ -194,11 +199,11 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
    const wrappedDispatch = useCallback<React.Dispatch<Action>>((action) => {
     const { payload } = action;
 
-    if (isCloudSyncing && userDocRef) {
-      const batch = writeBatch(firestore!);
+    if (isCloudSyncing && userDocRef && firestore) {
+      const batch = writeBatch(firestore);
       switch (action.type) {
         case 'ADD_TRANSACTION':
-        case 'UPDATE_TRANTRANSACTION':
+        case 'UPDATE_TRANSACTION':
             batch.set(doc(userDocRef, 'transactions', (payload as AgriTransaction).id), payload);
             break;
         case 'DELETE_TRANSACTION':
@@ -215,11 +220,13 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
             batch.set(userDocRef, payload, { merge: true });
             break;
         default:
-            // For SET_STATE, we assume it's coming from Firestore, so we just update local state
+            // For SET_STATE, we assume it's coming from Firestore or local storage, so we just update local state
              dispatch(action);
              return;
       }
-       batch.commit().catch(e => console.error("Firestore update failed:", e));
+       batch.commit()
+        .then(() => dispatch(action))
+        .catch(e => console.error("Firestore update failed:", e));
     } else {
         dispatch(action);
     }
