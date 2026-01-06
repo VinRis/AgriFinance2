@@ -28,4 +28,5 @@ export interface FarmTask {
   livestockType: LivestockType | 'general';
   description: string;
   status: TaskStatus;
+  priority: 'low' | 'medium' | 'high';
 }

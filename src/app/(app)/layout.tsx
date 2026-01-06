@@ -10,6 +10,7 @@ import { TaskForm } from './tasks/task-form';
 import { LivestockType } from '@/lib/types';
 import { useLocalStorage } from '@/hooks/use-local-storage';
 import { useExitPrompt } from '@/hooks/use-exit-prompt';
+import { cn } from '@/lib/utils';
 
 export default function AppLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
@@ -38,6 +39,12 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
     return null;
   }
 
+  const fabClasses = cn(
+    "fixed bottom-20 right-6 rounded-2xl shadow-lg z-20 no-print transition-all duration-300",
+    isTasksPage ? "h-16 w-16 bg-green-500 hover:bg-green-600" : "h-16 w-16"
+  );
+
+
   return (
     <div className="flex min-h-screen w-full flex-col bg-muted/40">
       <Header />
@@ -51,7 +58,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
          <>
             <Button
               onClick={handleFabClick}
-              className="fixed bottom-20 right-6 h-16 w-16 rounded-full shadow-lg z-20 no-print"
+              className={fabClasses}
               size="icon"
             >
               <Plus className="h-8 w-8" />

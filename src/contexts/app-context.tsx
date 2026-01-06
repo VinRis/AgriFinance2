@@ -88,7 +88,7 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
     // Sync state from local storage once on initial load
     const transactions = storedState.transactions || [];
     const settings = { ...defaultSettings, ...(storedState.settings || {}) };
-    const tasks = storedState.tasks || [];
+    const tasks = (storedState.tasks || []).map(t => ({...t, priority: t.priority || 'medium' })); // Migration for priority
     dispatch({ type: 'SET_STATE', payload: { transactions, settings, tasks } });
   }, []); // Empty dependency array ensures this runs only once on mount
 

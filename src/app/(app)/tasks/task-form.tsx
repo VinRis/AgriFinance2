@@ -11,8 +11,9 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetFooter, SheetClose }
 import { useAppContext } from '@/contexts/app-context';
 import { FarmTask, LivestockType } from '@/lib/types';
 import { useToast } from '@/hooks/use-toast';
-import { Bird, Milk, Wrench } from 'lucide-react';
+import { Bird, Milk, Wrench, Siren } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 
 type TaskFormProps = {
   isOpen: boolean;
@@ -27,6 +28,7 @@ const formSchema = z.object({
   title: z.string().min(1, 'Title is required.'),
   livestockType: z.enum(['dairy', 'poultry', 'general'], { required_error: 'Please select a category.'}),
   description: z.string().optional(),
+  priority: z.enum(['low', 'medium', 'high']).default('medium'),
 });
 
 
@@ -51,14 +53,14 @@ export function TaskForm({ isOpen, onClose, task, selectedDate }: TaskFormProps)
     resolver: zodResolver(formSchema),
     defaultValues: task
       ? { ...task, date: new Date(task.date).toISOString().split('T')[0] }
-      : { livestockType: 'general', title: '', description: '', date: getDefaultDate(), time: getDefaultTime() },
+      : { livestockType: 'general', title: '', description: '', date: getDefaultDate(), time: getDefaultTime(), priority: 'medium' },
   });
 
   useEffect(() => {
     if (isOpen) {
        form.reset(task
         ? { ...task, date: new Date(task.date).toISOString().split('T')[0] }
-        : { livestockType: 'general', title: '', description: '', date: getDefaultDate(), time: getDefaultTime() }
+        : { livestockType: 'general', title: '', description: '', date: getDefaultDate(), time: getDefaultTime(), priority: 'medium' }
       );
     }
   }, [isOpen, task, selectedDate, form]);
@@ -172,6 +174,37 @@ export function TaskForm({ isOpen, onClose, task, selectedDate }: TaskFormProps)
                   />
                 </div>
               </div>
+
+               <FormField
+                control={form.control}
+                name="priority"
+                render={({ field }) => (
+                  <FormItem className="space-y-3">
+                    <FormLabel>Priority</FormLabel>
+                    <FormControl>
+                      <RadioGroup
+                        onValueChange={field.onChange}
+                        defaultValue={field.value}
+                        className="flex space-x-4"
+                      >
+                        <FormItem className="flex items-center space-x-2 space-y-0">
+                          <FormControl><RadioGroupItem value="low" /></FormControl>
+                          <FormLabel className="font-normal">Low</FormLabel>
+                        </FormItem>
+                        <FormItem className="flex items-center space-x-2 space-y-0">
+                          <FormControl><RadioGroupItem value="medium" /></FormControl>
+                          <FormLabel className="font-normal">Medium</FormLabel>
+                        </FormItem>
+                        <FormItem className="flex items-center space-x-2 space-y-0">
+                          <FormControl><RadioGroupItem value="high" /></FormControl>
+                          <FormLabel className="font-normal flex items-center gap-1"><Siren className="h-4 w-4 text-destructive" /> High</FormLabel>
+                        </FormItem>
+                      </RadioGroup>
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
               
               <FormField
                 control={form.control}
