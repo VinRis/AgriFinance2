@@ -158,14 +158,13 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
 
   // Subscribe to Firestore data when logged in
   useEffect(() => {
-    if (isCloudSyncing && userDocRef && transactionsColRef && tasksColRef) {
-        setIsHydrated(false);
+    if (isUserLoading) return; // Wait until we know the auth state
 
+    if (isCloudSyncing && userDocRef && transactionsColRef && tasksColRef) {
         const unsubSettings = onSnapshot(userDocRef, (doc) => {
           if (doc.exists()) {
             dispatch({ type: 'UPDATE_SETTINGS', payload: doc.data() as AppSettings });
           } else {
-            // First time user, set default settings in firestore
             if(firestore) {
               setDoc(userDocRef, defaultSettings);
             }
@@ -180,27 +179,21 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
         const unsubTasks = onSnapshot(tasksColRef, (snapshot) => {
           const tasks = snapshot.docs.map(doc => doc.data() as FarmTask);
           dispatch({ type: 'SET_STATE', payload: { tasks } });
+          if (!isHydrated) setIsHydrated(true);
         });
-
-        // After all subscriptions are set up and potentially fired once
-        const timer = setTimeout(() => setIsHydrated(true), 500); // Small delay to allow data to populate
 
         return () => {
           unsubSettings();
           unsubTransactions();
           unsubTasks();
-          clearTimeout(timer);
         };
-    }
-  }, [isCloudSyncing, userDocRef, transactionsColRef, tasksColRef, firestore]);
-
-  // Load from local storage if not logged in
-  useEffect(() => {
-    if (!isUserLoading && !isCloudSyncing) {
+    } else {
+      // Not logged in, load from local storage once.
       dispatch({ type: 'SET_STATE', payload: storedState });
       setIsHydrated(true);
     }
-  }, [isUserLoading, isCloudSyncing, storedState]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isCloudSyncing, isUserLoading, userDocRef, transactionsColRef, tasksColRef, firestore]);
 
   // Persist state to local storage if not logged in
   useEffect(() => {
@@ -210,24 +203,24 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
   }, [state, isHydrated, isCloudSyncing, setStoredState]);
   
    const wrappedDispatch = useCallback<React.Dispatch<Action>>((action) => {
-    if (isCloudSyncing && userDocRef && firestore) {
+    if (isCloudSyncing && userDocRef && firestore && transactionsColRef && tasksColRef) {
       const { type, payload } = action;
       const batch = writeBatch(firestore);
       try {
         switch (type) {
             case 'ADD_TRANSACTION':
             case 'UPDATE_TRANSACTION':
-                batch.set(doc(transactionsColRef!, (payload as AgriTransaction).id), payload);
+                batch.set(doc(transactionsColRef, (payload as AgriTransaction).id), payload);
                 break;
             case 'DELETE_TRANSACTION':
-                batch.delete(doc(transactionsColRef!, payload as string));
+                batch.delete(doc(transactionsColRef, payload as string));
                 break;
             case 'ADD_TASK':
             case 'UPDATE_TASK':
-                batch.set(doc(tasksColRef!, (payload as FarmTask).id), payload);
+                batch.set(doc(tasksColRef, (payload as FarmTask).id), payload);
                 break;
             case 'DELETE_TASK':
-                batch.delete(doc(tasksColRef!, payload as string));
+                batch.delete(doc(tasksColRef, payload as string));
                 break;
             case 'UPDATE_SETTINGS':
                 batch.set(userDocRef, payload, { merge: true });
