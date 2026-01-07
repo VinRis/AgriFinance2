@@ -2,7 +2,7 @@
 import Image from 'next/image';
 import Link from 'next/link';
 import { PlaceHolderImages } from '@/lib/placeholder-images';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { ArrowRight, Download, Upload, Lightbulb, Cloud } from 'lucide-react';
 import { useAppContext } from '@/contexts/app-context';
 import { useToast } from '@/hooks/use-toast';
@@ -146,7 +146,7 @@ export default function LivestockSelectionPage() {
       <div className="mt-10 grid w-full max-w-3xl grid-cols-1 gap-6 md:grid-cols-2">
         {selectionOptions.map((option) => (
           <Link href={option.href} key={option.type}>
-            <Card className="group transform-gpu overflow-hidden border-2 border-transparent transition-all duration-300 ease-in-out hover:border-primary hover:shadow-lg hover:scale-105 md:hover:scale-105">
+            <Card className="group transform-gpu overflow-hidden border-2 border-transparent transition-all duration-300 ease-in-out hover:border-primary">
                {/* Desktop View Card */}
               <CardContent className="relative hidden p-0 md:block">
                 {option.image && (
@@ -194,12 +194,8 @@ export default function LivestockSelectionPage() {
       </div>
        <div className="mt-8 grid w-full max-w-3xl gap-6">
          <Card>
-           <CardHeader>
-              <CardTitle>Tools & Tips</CardTitle>
-              <CardDescription>Manage your data and get helpful farming tips.</CardDescription>
-            </CardHeader>
-          <CardContent className="flex flex-col gap-6">
-              <div className="flex items-start gap-4 rounded-lg border p-4">
+           <CardContent className="flex flex-col gap-4 p-4">
+              <div className="flex items-start gap-4 rounded-lg border p-4 bg-background/80">
                   <Lightbulb className="h-6 w-6 flex-shrink-0 text-primary" />
                   <div>
                       <h4 className="font-semibold">Farm Tip</h4>
@@ -209,7 +205,7 @@ export default function LivestockSelectionPage() {
                   </div>
               </div>
             
-            <div className="flex flex-col items-center justify-center gap-4 rounded-lg border p-4">
+            <div className="flex flex-col items-center justify-center gap-4 rounded-lg border p-4 bg-background/80">
                 <div className="flex flex-col gap-4 sm:flex-row">
                     <Button onClick={handleBackup}>
                         <Download className="mr-2 h-4 w-4" />
@@ -233,7 +229,7 @@ export default function LivestockSelectionPage() {
             </div>
 
             <AlertDialog>
-              <div className="flex flex-col items-center justify-center gap-4 rounded-lg border p-4">
+              <div className="flex flex-col items-center justify-center gap-4 rounded-lg border p-4 bg-background/80">
                   <AlertDialogTrigger asChild>
                     <Button variant="default">
                         <Cloud className="mr-2 h-4 w-4" />
