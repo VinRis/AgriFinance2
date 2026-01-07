@@ -1,7 +1,6 @@
 'use client';
 import Image from 'next/image';
 import Link from 'next/link';
-import { PlaceHolderImages } from '@/lib/placeholder-images';
 import { Card, CardContent } from '@/components/ui/card';
 import { ArrowRight, Download, Upload, Lightbulb, Cloud, LogIn, AlertTriangle } from 'lucide-react';
 import { useAppContext } from '@/contexts/app-context';
@@ -42,8 +41,16 @@ const farmTips = [
 ];
 
 export default function LivestockSelectionPage() {
-  const dairyImage = PlaceHolderImages.find((img) => img.id === 'dairy-selection');
-  const poultryImage = PlaceHolderImages.find((img) => img.id === 'poultry-selection');
+  const dairyImage = {
+    imageUrl: "https://picsum.photos/seed/dairy/600/400",
+    description: "A dairy cow in a field",
+    imageHint: "dairy cow"
+  };
+  const poultryImage = {
+    imageUrl: "https://picsum.photos/seed/poultry/600/400",
+    description: "Chickens at a poultry farm",
+    imageHint: "chickens farm"
+  };
 
   const { transactions, settings, tasks, dispatch } = useAppContext();
   const { toast } = useToast();
