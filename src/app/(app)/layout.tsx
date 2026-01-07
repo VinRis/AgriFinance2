@@ -17,7 +17,6 @@ import { Loader } from 'lucide-react';
 export default function AppLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const { isHydrated } = useAppContext();
-
   useExitPrompt(true);
   const [isFormOpen, setFormOpen] = useState(false);
   const segments = pathname.split('/');

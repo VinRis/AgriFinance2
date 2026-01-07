@@ -1,5 +1,6 @@
 'use client';
 import { useEffect, useState } from 'react';
+import { useToast } from '@/hooks/use-toast';
 import { Button } from '@/components/ui/button';
 import { Download } from 'lucide-react';
 
@@ -14,6 +15,7 @@ interface BeforeInstallPromptEvent extends Event {
 }
 
 export function InstallPWA() {
+  const { toast } = useToast();
   const [installPromptEvent, setInstallPromptEvent] = useState<BeforeInstallPromptEvent | null>(null);
 
   useEffect(() => {
@@ -21,6 +23,19 @@ export function InstallPWA() {
       event.preventDefault();
       // Stash the event so it can be triggered later.
       setInstallPromptEvent(event as BeforeInstallPromptEvent);
+
+      // Show the toast notification
+      toast({
+        title: 'Install AgriFinance Pro',
+        description: 'Add the app to your home screen for easy access.',
+        duration: 10000, // Keep it open a bit longer
+        action: (
+          <Button onClick={handleInstallClick}>
+            <Download className="mr-2 h-4 w-4" />
+            Install
+          </Button>
+        ),
+      });
     };
 
     window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
@@ -28,42 +43,23 @@ export function InstallPWA() {
     return () => {
       window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
     };
-  }, []);
+  }, [toast]);
 
   const handleInstallClick = async () => {
     if (!installPromptEvent) {
       return;
     }
 
-    // Show the browser's native installation prompt
     installPromptEvent.prompt();
-    
-    // Wait for the user to respond to the prompt
     const { outcome } = await installPromptEvent.userChoice;
-    
-    // We can only use the prompt once.
-    setInstallPromptEvent(null);
-
     if (outcome === 'accepted') {
       console.log('User accepted the A2HS prompt');
     } else {
       console.log('User dismissed the A2HS prompt');
     }
+    // We can only use the prompt once.
+    setInstallPromptEvent(null);
   };
 
-  // Render the install button only if the event has been captured
-  if (!installPromptEvent) {
-    return null;
-  }
-
-  return (
-    <Button
-        onClick={handleInstallClick}
-        className="fixed bottom-24 right-6 h-12 rounded-full shadow-lg z-30 no-print"
-        size="lg"
-    >
-        <Download className="mr-2 h-4 w-4" />
-        Install App
-    </Button>
-  );
+  return null; // This component doesn't render anything itself
 }

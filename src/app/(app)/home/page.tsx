@@ -2,23 +2,23 @@
 import Image from 'next/image';
 import Link from 'next/link';
 import { PlaceHolderImages } from '@/lib/placeholder-images';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { ArrowRight, Download, Upload, Lightbulb, LogIn } from 'lucide-react';
+import { Card, CardContent } from '@/components/ui/card';
+import { ArrowRight, Download, Upload, Lightbulb, Cloud } from 'lucide-react';
 import { useAppContext } from '@/contexts/app-context';
 import { useToast } from '@/hooks/use-toast';
 import { Button } from '@/components/ui/button';
 import { AgriTransaction, AppSettings, FarmTask } from '@/lib/types';
 import React, { useRef, useState, useEffect } from 'react';
 import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
-  DialogFooter,
-  DialogTrigger,
-  DialogClose,
-} from '@/components/ui/dialog';
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog"
 
 type AppState = {
   transactions: AgriTransaction[];
@@ -146,7 +146,7 @@ export default function LivestockSelectionPage() {
       <div className="mt-10 grid w-full max-w-3xl grid-cols-1 gap-6 md:grid-cols-2">
         {selectionOptions.map((option) => (
           <Link href={option.href} key={option.type}>
-            <Card className="group transform-gpu overflow-hidden border-2 border-transparent transition-all duration-300 ease-in-out hover:border-primary hover:shadow-lg hover:scale-105 md:hover:scale-105">
+            <Card className="group transform-gpu overflow-hidden border-2 border-transparent transition-all duration-300 ease-in-out hover:border-primary hover:shadow-lg hover:scale-105">
                {/* Desktop View Card */}
               <CardContent className="relative hidden p-0 md:block">
                 {option.image && (
@@ -194,12 +194,8 @@ export default function LivestockSelectionPage() {
       </div>
        <div className="mt-8 grid w-full max-w-3xl gap-6">
          <Card>
-           <CardHeader>
-              <CardTitle>Tools & Tips</CardTitle>
-              <CardDescription>Manage your data and get helpful farming tips.</CardDescription>
-            </CardHeader>
-          <CardContent className="flex flex-col gap-6">
-              <div className="flex items-start gap-4 rounded-lg border p-4">
+           <CardContent className="flex flex-col gap-4 p-4">
+              <div className="flex items-start gap-4 rounded-lg border p-4 bg-background/80">
                   <Lightbulb className="h-6 w-6 flex-shrink-0 text-primary" />
                   <div>
                       <h4 className="font-semibold">Farm Tip</h4>
@@ -209,28 +205,23 @@ export default function LivestockSelectionPage() {
                   </div>
               </div>
             
-            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                <div className="flex flex-col items-center justify-center gap-4 rounded-lg border p-4">
-                    <div className="flex flex-col gap-4 sm:flex-row">
-                        <Button onClick={handleBackup}>
-                            <Download className="mr-2 h-4 w-4" />
-                            Backup Data
-                        </Button>
-                        <Button onClick={handleRestoreClick} variant="outline">
-                            <Upload className="mr-2 h-4 w-4" />
-                            Restore Data
-                        </Button>
-                        <input
-                            type="file"
-                            ref={fileInputRef}
-                            onChange={handleFileChange}
-                            accept="application/json"
-                            className="hidden"
-                        />
-                    </div>
-                    <p className="text-xs text-muted-foreground text-center mt-2">
-                        Your data is stored locally on your device. Keep a weekly backup to prevent data loss.
-                    </p>
+            <div className="flex flex-col items-center justify-center gap-4 rounded-lg border p-4 bg-background/80">
+                <div className="flex flex-col gap-4 sm:flex-row">
+                    <Button onClick={handleBackup}>
+                        <Download className="mr-2 h-4 w-4" />
+                        Backup Data
+                    </Button>
+                    <Button onClick={handleRestoreClick} variant="outline">
+                        <Upload className="mr-2 h-4 w-4" />
+                        Restore Data
+                    </Button>
+                    <input
+                        type="file"
+                        ref={fileInputRef}
+                        onChange={handleFileChange}
+                        accept="application/json"
+                        className="hidden"
+                    />
                 </div>
                  <Dialog>
                     <DialogTrigger asChild>
@@ -259,6 +250,31 @@ export default function LivestockSelectionPage() {
                     </DialogContent>
                 </Dialog>
             </div>
+
+            <AlertDialog>
+              <div className="flex flex-col items-center justify-center gap-4 rounded-lg border p-4 bg-background/80">
+                  <AlertDialogTrigger asChild>
+                    <Button variant="default">
+                        <Cloud className="mr-2 h-4 w-4" />
+                        Login to Sync
+                    </Button>
+                  </AlertDialogTrigger>
+                  <p className="text-xs text-muted-foreground text-center mt-2">
+                      Sync your data across multiple devices.
+                  </p>
+              </div>
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogTitle>Feature Coming Soon!</AlertDialogTitle>
+                  <AlertDialogDescription>
+                    We are working hard to bring you cloud synchronization. This will allow you to access your farm data from any device, anywhere. Stay tuned for updates!
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogAction>Got it!</AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
           </CardContent>
         </Card>
       </div>
