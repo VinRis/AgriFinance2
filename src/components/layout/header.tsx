@@ -58,11 +58,22 @@ export function Header() {
       );
     }
     
+    const DateDisplay = () => (
+        <div className="flex-1 flex justify-center items-center">
+            <div className="flex items-center gap-2 rounded-full bg-secondary text-secondary-foreground px-3 py-1 shadow-inner">
+                <span className="font-bold text-sm">{format(new Date(), 'dd')}</span>
+                <div className="h-4 w-px bg-secondary-foreground/50"></div>
+                <span className="text-xs">{format(new Date(), 'MMM, yyyy')}</span>
+            </div>
+        </div>
+    );
+    
     const renderHeaderContent = () => {
        if (pathname.includes('/tasks')) {
          return (
              <div className="flex w-full items-center justify-between">
                 {renderTitle()}
+                <DateDisplay />
                 <div className="flex items-center gap-2">
                     {/* Add Filter and Calendar icons here if needed */}
                 </div>
@@ -74,6 +85,7 @@ export function Header() {
          return (
               <div className="flex w-full items-center justify-between">
                 {renderTitle()}
+                 <DateDisplay />
                 <div className="flex items-center gap-2">
                     {/* User Profile Icon */}
                 </div>
@@ -87,6 +99,7 @@ export function Header() {
                   <EnterpriseIcon className="h-6 w-6 text-primary" />
                   {renderTitle()}
               </div>
+              <DateDisplay />
               {title && <div className="hidden md:block ml-auto text-lg font-semibold">{title}</div>}
            </>
        )

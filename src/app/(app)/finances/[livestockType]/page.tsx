@@ -3,12 +3,13 @@ import { useState, useMemo } from 'react';
 import { notFound, usePathname } from 'next/navigation';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { ArrowDown, ArrowUp, Droplets, Egg, Pill, Plus, Utensils } from 'lucide-react';
+import { ArrowDown, ArrowUp, Droplets, Egg, Pill, Plus, Search, Utensils } from 'lucide-react';
 import { LivestockType, AgriTransaction } from '@/lib/types';
 import { useAppContext } from '@/contexts/app-context';
 import { RecordForm } from './record-form';
 import { format, startOfWeek, endOfWeek, startOfMonth, endOfMonth, isToday, isYesterday, parseISO } from 'date-fns';
 import { cn } from '@/lib/utils';
+import { Input } from '@/components/ui/input';
 
 function formatCurrency(amount: number, currency: string) {
     return `${currency}${amount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
@@ -31,8 +32,9 @@ export default function FinancesPage() {
   const { getTransactions, settings } = useAppContext();
   const [isFormOpen, setFormOpen] = useState(false);
   const [selectedTransaction, setSelectedTransaction] = useState<AgriTransaction | null>(null);
-  const [timeFilter, setTimeFilter] = useState<'month' | 'week'>('month');
+  const [timeFilter, setTimeFilter] = useState<'month' | 'week' | 'all'>('month');
   const [categoryFilter, setCategoryFilter] = useState<string>('All');
+  const [searchQuery, setSearchQuery] = useState('');
   
   if (livestockType !== 'dairy' && livestockType !== 'poultry') {
     notFound();
@@ -47,9 +49,11 @@ export default function FinancesPage() {
     if (timeFilter === 'week') {
         fromDate = startOfWeek(now);
         toDate = endOfWeek(now);
-    } else { // month
+    } else if (timeFilter === 'month') { // month
         fromDate = startOfMonth(now);
         toDate = endOfMonth(now);
+    } else { // 'all'
+        return allTransactions;
     }
     
     return allTransactions.filter(t => {
@@ -59,13 +63,25 @@ export default function FinancesPage() {
   }, [allTransactions, timeFilter]);
 
   const filteredTransactions = useMemo(() => {
-    if (categoryFilter === 'All') {
-        return filteredByTime;
+    let transactions = filteredByTime;
+
+    if (categoryFilter !== 'All') {
+        transactions = transactions.filter(t => t.category === categoryFilter);
     }
-    return filteredByTime.filter(t => t.category === categoryFilter);
-  }, [filteredByTime, categoryFilter]);
+
+    if (timeFilter === 'all' && searchQuery.trim() !== '') {
+        const lowercasedQuery = searchQuery.toLowerCase();
+        transactions = transactions.filter(t =>
+            t.description.toLowerCase().includes(lowercasedQuery) ||
+            t.category.toLowerCase().includes(lowercasedQuery)
+        );
+    }
+
+    return transactions;
+  }, [filteredByTime, categoryFilter, searchQuery, timeFilter]);
   
   const { totalBalance, totalIncome, totalExpenses } = useMemo(() => {
+    // Totals should reflect the time filter (month/week) but not the category/search filter
     const income = filteredByTime.reduce((acc, t) => t.transactionType === 'income' ? acc + t.amount : acc, 0);
     const expenses = filteredByTime.reduce((acc, t) => t.transactionType === 'expense' ? acc + t.amount : acc, 0);
     return {
@@ -87,15 +103,19 @@ export default function FinancesPage() {
     sorted.forEach(t => {
         const date = parseISO(t.date);
         let key = '';
-        if (isToday(date)) key = 'Today';
-        else if (isYesterday(date)) key = 'Yesterday';
-        else key = format(date, 'MMMM d, yyyy');
+        if (timeFilter !== 'all') {
+            if (isToday(date)) key = 'Today';
+            else if (isYesterday(date)) key = 'Yesterday';
+            else key = format(date, 'MMMM d, yyyy');
+        } else {
+            key = format(date, 'MMMM d, yyyy');
+        }
 
         if (!groups[key]) groups[key] = [];
         groups[key].push(t);
     });
     return groups;
-  }, [filteredTransactions]);
+  }, [filteredTransactions, timeFilter]);
 
 
   const handleEdit = (transaction: AgriTransaction) => {
@@ -137,7 +157,7 @@ export default function FinancesPage() {
   return (
     <div className="grid auto-rows-max items-start gap-4 md:gap-8 lg:col-span-3">
         <div className="text-center space-y-2">
-            <p className="text-sm text-muted-foreground">Total Balance</p>
+            <p className="text-sm text-muted-foreground">Total Balance {timeFilter !== 'all' ? `(This ${timeFilter})` : `(All Time)`}</p>
             <h2 className="text-4xl font-bold">{formatCurrency(totalBalance, settings.currency)}</h2>
         </div>
 
@@ -145,16 +165,23 @@ export default function FinancesPage() {
             <Button
                 onClick={() => setTimeFilter('month')}
                 variant={timeFilter === 'month' ? 'default' : 'ghost'}
-                className="w-1/2 rounded-full"
+                className="w-1/3 rounded-full"
             >
                 This Month
             </Button>
             <Button
                 onClick={() => setTimeFilter('week')}
                 variant={timeFilter === 'week' ? 'default' : 'ghost'}
-                className="w-1/2 rounded-full"
+                className="w-1/3 rounded-full"
             >
                 This Week
+            </Button>
+            <Button
+                onClick={() => setTimeFilter('all')}
+                variant={timeFilter === 'all' ? 'default' : 'ghost'}
+                className="w-1/3 rounded-full"
+            >
+                All Time
             </Button>
         </div>
 
@@ -183,6 +210,18 @@ export default function FinancesPage() {
             </Card>
         </div>
         
+        {timeFilter === 'all' && (
+            <div className="relative">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
+                <Input
+                    placeholder="Search transactions..."
+                    className="pl-10"
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                />
+            </div>
+        )}
+
         <div className="flex space-x-2 overflow-x-auto pb-2 -mx-4 px-4 no-scrollbar">
             {categories.map(cat => (
                 <Button
@@ -210,7 +249,7 @@ export default function FinancesPage() {
                 ))
             ) : (
                  <div className="text-center py-12">
-                    <p className="text-muted-foreground">No transactions for this period or category.</p>
+                    <p className="text-muted-foreground">No transactions for this period or filter.</p>
                 </div>
             )}
         </div>

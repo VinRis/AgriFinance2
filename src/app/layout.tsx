@@ -15,7 +15,11 @@ declare global {
 export const metadata: Metadata = {
   title: 'Agri Finance',
   description: 'Financial management for your livestock enterprise.',
-  manifest: '/manifest.json'
+  manifest: '/manifest.json',
+  icons: {
+    icon: '/favicon.ico', // This will now correctly point to src/app/favicon.ico
+    apple: '/images/icon-192x192.png',
+  },
 };
 
 export default function RootLayout({
@@ -32,6 +36,7 @@ export default function RootLayout({
           href="https://fonts.googleapis.com/css2?family=PT+Sans:ital,wght@0,400;0,700;1,400;1,700&display=swap"
           rel="stylesheet"
         />
+        <meta name="theme-color" content="#ffffff" />
       </head>
       <body suppressHydrationWarning={true}>
         <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
