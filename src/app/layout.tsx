@@ -15,7 +15,10 @@ declare global {
 export const metadata: Metadata = {
   title: 'Agri Finance',
   description: 'Financial management for your livestock enterprise.',
-  manifest: '/manifest.json'
+  manifest: '/manifest.json',
+  icons: {
+    apple: '/images/apple-touch-icon.png',
+  },
 };
 
 export default function RootLayout({
@@ -32,6 +35,7 @@ export default function RootLayout({
           href="https://fonts.googleapis.com/css2?family=PT+Sans:ital,wght@0,400;0,700;1,400;1,700&display=swap"
           rel="stylesheet"
         />
+        <meta name="theme-color" content="#3F704F" />
       </head>
       <body suppressHydrationWarning={true}>
         <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
