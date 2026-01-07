@@ -17,7 +17,7 @@ export const metadata: Metadata = {
   description: 'Financial management for your livestock enterprise.',
   manifest: '/manifest.json',
   icons: {
-    apple: '/images/apple-touch-icon.png',
+    apple: '/apple-touch-icon.png',
   },
 };
 
