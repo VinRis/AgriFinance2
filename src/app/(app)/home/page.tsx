@@ -146,7 +146,7 @@ export default function LivestockSelectionPage() {
       <div className="mt-10 grid w-full max-w-3xl grid-cols-1 gap-6 md:grid-cols-2">
         {selectionOptions.map((option) => (
           <Link href={option.href} key={option.type}>
-            <Card className="group transform-gpu overflow-hidden border-2 border-transparent transition-all duration-300 ease-in-out hover:border-primary">
+            <Card className="group transform-gpu overflow-hidden border-2 border-transparent transition-all duration-300 ease-in-out hover:border-primary hover:shadow-lg hover:scale-105">
                {/* Desktop View Card */}
               <CardContent className="relative hidden p-0 md:block">
                 {option.image && (
