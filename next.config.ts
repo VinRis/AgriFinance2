@@ -6,6 +6,7 @@ const withPWA = require('next-pwa')({
   register: true,
   skipWaiting: false,
   disable: process.env.NODE_ENV === 'development',
+  buildExcludes: [() => true], // Force regeneration of the service worker
   runtimeCaching: [
     {
       urlPattern: ({ request }) => request.mode === 'navigate',
