@@ -3,12 +3,22 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { PlaceHolderImages } from '@/lib/placeholder-images';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { ArrowRight, Download, Upload, Lightbulb } from 'lucide-react';
+import { ArrowRight, Download, Upload, Lightbulb, Cloud } from 'lucide-react';
 import { useAppContext } from '@/contexts/app-context';
 import { useToast } from '@/hooks/use-toast';
 import { Button } from '@/components/ui/button';
 import { AgriTransaction, AppSettings, FarmTask } from '@/lib/types';
 import React, { useRef, useState, useEffect } from 'react';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog"
 
 type AppState = {
   transactions: AgriTransaction[];
@@ -221,6 +231,31 @@ export default function LivestockSelectionPage() {
                     Your data is stored locally on your device. Keep a weekly backup to prevent data loss.
                 </p>
             </div>
+
+            <AlertDialog>
+              <div className="flex flex-col items-center justify-center gap-4 rounded-lg border p-4">
+                  <AlertDialogTrigger asChild>
+                    <Button variant="default">
+                        <Cloud className="mr-2 h-4 w-4" />
+                        Login to Sync
+                    </Button>
+                  </AlertDialogTrigger>
+                  <p className="text-xs text-muted-foreground text-center mt-2">
+                      Sync your data across multiple devices.
+                  </p>
+              </div>
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogTitle>Feature Coming Soon!</AlertDialogTitle>
+                  <AlertDialogDescription>
+                    We are working hard to bring you cloud synchronization. This will allow you to access your farm data from any device, anywhere. Stay tuned for updates!
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogAction>Got it!</AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
           </CardContent>
         </Card>
       </div>
