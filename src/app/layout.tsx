@@ -3,8 +3,6 @@ import './globals.css';
 import {ThemeProvider} from '@/components/theme-provider';
 import {Toaster} from '@/components/ui/toaster';
 import {AppProvider} from '@/contexts/app-context';
-import { PWALifecycle } from '@/components/pwa-lifecycle';
-import { InstallPWA } from '@/components/install-pwa';
 
 declare global {
   interface Window {
@@ -41,8 +39,6 @@ export default function RootLayout({
       <body suppressHydrationWarning={true}>
         <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
             <AppProvider>
-              <PWALifecycle />
-              <InstallPWA />
               {children}
               <Toaster />
             </AppProvider>
