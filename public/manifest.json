@@ -1,7 +1,6 @@
 {
   "name": "Agri Finance",
-  "short_name": "AgriFi",
-  "description": "Financial management for your livestock enterprise.",
+  "short_name": "AgriFinance",
   "icons": [
     {
       "src": "/android-chrome-192x192.png",
@@ -16,6 +15,5 @@
   ],
   "theme_color": "#2563EB",
   "background_color": "#ffffff",
-  "start_url": "/home",
   "display": "standalone"
 }

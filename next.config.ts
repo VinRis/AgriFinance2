@@ -7,6 +7,11 @@ const withPWA = require('next-pwa')({
   skipWaiting: false,
   disable: process.env.NODE_ENV === 'development',
   buildExcludes: [() => true], // Force regeneration of the service worker
+  pwa: {
+    // Add a version to force update
+    // @ts-ignore
+    cacheId: `agrifinance-v${new Date().getTime()}`,
+  },
   runtimeCaching: [
     {
       urlPattern: ({ request }) => request.mode === 'navigate',
