@@ -140,13 +140,11 @@ export default function LivestockSelectionPage() {
     {
       type: 'Dairy',
       href: '/dashboard/dairy',
-      image: dairyImage,
       description: 'Manage finances for your dairy cows and milk production.',
     },
     {
       type: 'Poultry',
       href: '/dashboard/poultry',
-      image: poultryImage,
       description: 'Track expenses and income for your egg-laying flock.',
     },
   ];
@@ -171,47 +169,14 @@ export default function LivestockSelectionPage() {
         {selectionOptions.map((option) => (
           <Link href={option.href} key={option.type}>
             <Card className="group transform-gpu overflow-hidden border-2 border-transparent transition-all duration-300 ease-in-out hover:border-primary hover:shadow-xl hover:scale-105 hover:shadow-primary/20">
-               {/* Desktop View Card */}
-              <CardContent className="relative hidden p-0 md:block">
-                {option.image && (
-                  <Image
-                    src={option.image.imageUrl}
-                    alt={option.image.description}
-                    width={600}
-                    height={400}
-                    className="aspect-[3/2] w-full object-cover transition-transform duration-300 group-hover:scale-110"
-                    data-ai-hint={option.image.imageHint}
-                  />
-                )}
-                <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent" />
-                <div className="absolute bottom-0 w-full p-6">
-                  <h2 className="font-headline text-3xl font-bold text-white">{option.type}</h2>
-                  <p className="mt-1 text-white/90">{option.description}</p>
-                  <div className="mt-4 flex items-center text-accent">
+              <CardContent className="p-6 text-center">
+                  <h2 className="font-headline text-3xl font-bold text-primary">{option.type}</h2>
+                  <p className="mt-2 text-muted-foreground">{option.description}</p>
+                  <div className="mt-4 flex items-center justify-center text-primary group-hover:text-accent">
                     <span className="font-semibold">Get Started</span>
                     <ArrowRight className="ml-2 h-5 w-5 transform transition-transform duration-300 group-hover:translate-x-1" />
                   </div>
-                </div>
               </CardContent>
-
-              {/* Mobile View Card */}
-               <CardContent className="flex items-center gap-4 p-4 md:hidden">
-                 {option.image && (
-                    <Image
-                      src={option.image.imageUrl}
-                      alt={option.image.description}
-                      width={100}
-                      height={100}
-                      className="h-20 w-20 rounded-lg object-cover"
-                      data-ai-hint={option.image.imageHint}
-                    />
-                  )}
-                  <div className="flex-1">
-                      <h2 className="font-headline text-xl font-bold text-foreground">{option.type}</h2>
-                      <p className="text-sm text-muted-foreground">{option.description}</p>
-                  </div>
-                  <ArrowRight className="h-5 w-5 text-muted-foreground transition-transform group-hover:translate-x-1" />
-               </CardContent>
             </Card>
           </Link>
         ))}
@@ -286,5 +251,3 @@ export default function LivestockSelectionPage() {
     </main>
   );
 }
-
-    
