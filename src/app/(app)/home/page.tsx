@@ -1,7 +1,7 @@
 'use client';
 import Link from 'next/link';
 import { Card, CardContent } from '@/components/ui/card';
-import { ArrowRight, Download, Upload, Lightbulb, Cloud, LogIn, AlertTriangle } from 'lucide-react';
+import { ArrowRight, Download, Upload, Lightbulb, LogIn, AlertTriangle } from 'lucide-react';
 import { useAppContext } from '@/contexts/app-context';
 import { useToast } from '@/hooks/use-toast';
 import { Button } from '@/components/ui/button';
@@ -147,10 +147,7 @@ export default function LivestockSelectionPage() {
   return (
     <main className="flex min-h-screen w-full flex-col items-center justify-center bg-gradient-to-br from-background to-secondary/50 p-4 sm:p-6">
       <div className="w-full max-w-4xl text-center">
-        <h1 className={cn(
-          "animate-text-gradient bg-gradient-to-r from-primary via-accent to-primary bg-clip-text font-headline text-4xl font-black tracking-tight text-transparent sm:text-5xl md:text-6xl",
-          "bg-[200%_auto]"
-        )}>
+        <h1 className="font-headline text-4xl font-black tracking-tight text-foreground sm:text-5xl md:text-6xl">
           Welcome to Agri Finance
         </h1>
         <p className="mt-4 text-lg text-foreground/80 sm:text-xl">
