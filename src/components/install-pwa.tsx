@@ -17,44 +17,30 @@ export function InstallPWA() {
   const { toast, dismiss } = useToast();
   const [installPromptEvent, setInstallPromptEvent] = useState<BeforeInstallPromptEvent | null>(null);
 
-  const handleInstallClick = async () => {
-    if (!installPromptEvent) {
-      return;
-    }
-
-    installPromptEvent.prompt();
-    const { outcome } = await installPromptEvent.userChoice;
-    if (outcome === 'accepted') {
-      console.log('User accepted the A2HS prompt');
-    } else {
-      console.log('User dismissed the A2HS prompt');
-    }
-    setInstallPromptEvent(null);
-    dismiss();
-  };
-
   useEffect(() => {
     const handleBeforeInstallPrompt = (event: Event) => {
+      // Prevent the mini-infobar from appearing on mobile
       event.preventDefault();
-      const promptEvent = event as BeforeInstallPromptEvent;
+      // Stash the event so it can be triggered later.
+      const promptEvent = event as BeforeInstall_promptEvent;
       setInstallPromptEvent(promptEvent);
 
-      toast({
-        title: 'Install AgriFinance Pro',
-        description: 'Add the app to your home screen for easy access.',
-        duration: 10000,
+      // Show the toast prompt
+      const { id } = toast({
+        title: 'Install AgriFinance App',
+        description: 'Add the app to your home screen for offline access and a better experience.',
+        duration: 15000, // Give user some time to decide
         action: (
           <Button onClick={async () => {
               if (!promptEvent) return;
+              // Show the install prompt
               promptEvent.prompt();
-              const { outcome } = await promptEvent.userChoice;
-               if (outcome === 'accepted') {
-                console.log('User accepted the A2HS prompt');
-              } else {
-                console.log('User dismissed the A2HS prompt');
-              }
+              // Wait for the user to respond to the prompt
+              await promptEvent.userChoice;
+              // We've used the prompt, so we can't use it again
               setInstallPromptEvent(null);
-              dismiss();
+              // Dismiss the toast
+              dismiss(id);
           }}>
             <Download className="mr-2 h-4 w-4" />
             Install
@@ -68,7 +54,6 @@ export function InstallPWA() {
     return () => {
       window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
     };
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [toast, dismiss]);
 
   return null; 
