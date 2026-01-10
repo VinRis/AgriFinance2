@@ -20,7 +20,6 @@ import {
 } from '@/components/ui/dialog';
 import { useLocalStorage } from '@/hooks/use-local-storage';
 import { differenceInDays, parseISO } from 'date-fns';
-import placeholderImages from '@/lib/placeholder-images.json';
 import { cn } from '@/lib/utils';
 
 
@@ -44,8 +43,6 @@ const farmTips = [
 ];
 
 export default function LivestockSelectionPage() {
-  const dairyImage: PlaceholderImage = placeholderImages.dairy;
-  const poultryImage: PlaceholderImage = placeholderImages.poultry;
 
   const { transactions, settings, tasks, dispatch } = useAppContext();
   const { toast } = useToast();

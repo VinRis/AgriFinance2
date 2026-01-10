@@ -70,10 +70,10 @@
 
 @layer components {
   .card {
-    @apply bg-card/60 backdrop-blur-xl border-border/50 transition-all duration-200 ease-in-out;
+    @apply bg-card/60 backdrop-blur-xl border-border/50 transition-all duration-300 ease-in-out;
   }
   .card:hover {
-    @apply shadow-lg transform-gpu scale-[1.02];
+    @apply shadow-lg transform-gpu scale-[1.03] shadow-primary/10;
   }
 }
 
