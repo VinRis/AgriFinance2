@@ -7,6 +7,8 @@ import { useToast } from '@/hooks/use-toast';
 import { Button } from '@/components/ui/button';
 import { AgriTransaction, AppSettings, FarmTask } from '@/lib/types';
 import React, { useRef, useState, useEffect } from 'react';
+import Image from 'next/image';
+import placeholderImages from '@/lib/placeholder-images.json';
 import {
   Dialog,
   DialogClose,
@@ -136,18 +138,20 @@ export default function LivestockSelectionPage() {
       type: 'Dairy',
       href: '/dashboard/dairy',
       description: 'Manage finances for your dairy cows and milk production.',
+      image: placeholderImages.dairy,
     },
     {
       type: 'Poultry',
       href: '/dashboard/poultry',
       description: 'Track expenses and income for your egg-laying flock.',
+      image: placeholderImages.poultry,
     },
   ];
 
   return (
     <main className="flex min-h-screen w-full flex-col items-center justify-center bg-gradient-to-br from-background to-secondary/50 p-4 sm:p-6">
       <div className="w-full max-w-4xl text-center">
-        <h1 className="font-headline text-4xl font-black tracking-tight text-foreground sm:text-5xl md:text-6xl">
+         <h1 className="bg-[200%_auto] bg-clip-text font-headline text-4xl font-black tracking-tight text-foreground sm:text-5xl md:text-6xl">
           Welcome to Agri Finance
         </h1>
         <p className="mt-4 text-lg text-foreground/80 sm:text-xl">
@@ -160,11 +164,19 @@ export default function LivestockSelectionPage() {
       <div className="mt-10 grid w-full max-w-3xl grid-cols-1 gap-6 md:grid-cols-2">
         {selectionOptions.map((option) => (
           <Link href={option.href} key={option.type}>
-            <Card className="group transform-gpu overflow-hidden border-2 border-transparent transition-all duration-300 ease-in-out">
-              <CardContent className="p-6 text-center">
-                  <h2 className="font-headline text-3xl font-bold text-primary">{option.type}</h2>
-                  <p className="mt-2 text-muted-foreground">{option.description}</p>
-                  <div className="mt-4 flex items-center justify-center text-primary group-hover:text-accent">
+            <Card className="group relative transform-gpu overflow-hidden border-2 border-transparent transition-all duration-300 ease-in-out text-white">
+              <Image
+                src={option.image.imageUrl}
+                alt={option.image.description}
+                fill
+                className="object-cover transition-transform duration-500 group-hover:scale-105"
+                data-ai-hint={option.image.imageHint}
+              />
+              <div className="absolute inset-0 bg-black/50 transition-colors duration-300 group-hover:bg-black/60"></div>
+              <CardContent className="relative z-10 p-6 text-center flex flex-col justify-center items-center h-full">
+                  <h2 className="font-headline text-3xl font-bold">{option.type}</h2>
+                  <p className="mt-2 text-white/90">{option.description}</p>
+                  <div className="mt-4 flex items-center justify-center text-accent">
                     <span className="font-semibold">Get Started</span>
                     <ArrowRight className="ml-2 h-5 w-5 transform transition-transform duration-300 group-hover:translate-x-1" />
                   </div>
